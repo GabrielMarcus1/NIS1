@@ -12,7 +12,7 @@ import RSA_algorithm
 #       3.2 Confidentiality 
 # 4. Hashing (DONE) ✔️
 # 5. Key management - key rings, private , public, other persons. secret...
-# 6. Certificate (In progress)
+# 6. Certificate (DONE) ✔️
 # 7. Formatting message. (Owethu)
 # 8. Report
 # 9. Testing and debugging 
