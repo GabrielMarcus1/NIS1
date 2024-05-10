@@ -5,24 +5,27 @@ to construct the mesage as well as unravel the message
 import RSA_algorithm
 
 # TODO:  
-# 1. Add key rings
+# 1. Add key rings 
 # 2. Create secret key (Done) ✔️
 # 3. Construct message (PGP  paradigm)
-#       3.1 Authentication
-#       3.2 Confidentiality 
+#       3.1 Authentication  (DONE) ✔️ 
+#       3.2 Confidentiality (DONE) ✔️
 # 4. Hashing (DONE) ✔️
 # 5. Key management - key rings, private , public, other persons. secret...
 # 6. Certificate (DONE) ✔️
-# 7. Formatting message. (Owethu)
-# 8. Report
+# 7. Formatting message. (DONE) ✔️
+# 8. Report 
 # 9. Testing and debugging 
+# 10. Refactor
+# 11. Coments  
 
         
-# #create a users public private key set
-# private_key = RSA_algorithm.gen_private_key()
-# public_key = RSA_algorithm.gen_public_key(private_key)
+#create a users public private key set
+private_key = RSA_algorithm.gen_private_key()
+public_key = RSA_algorithm.gen_public_key(private_key)
 
-# print(private_key)
+print(public_key)
+
 
 # cipher= RSA_algorithm.encrypt("Hello World",public_key)
 

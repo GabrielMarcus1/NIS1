@@ -30,11 +30,6 @@ def gen_public_key(private_key):
     """
     public_key = private_key.public_key()
     return public_key
-
-
-#################################################
-
-
 #############ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
 # encrypte message using other users private key
 def encrypt(message, public_key):
@@ -69,11 +64,7 @@ def decrypt(cipher, private_key):
     )
 
     return plaintext.decode("utf8")
-
-
-
-
-
+###################################################################
 
 #################SECRET KEY#########################################
 def generate_secret_key():
@@ -109,7 +100,6 @@ def decrypt_message(encrypted_message, secret_key):
     decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
     print(decrypted_message)
     return decrypted_message
-
 
 ######################################################################
 
