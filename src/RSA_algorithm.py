@@ -11,7 +11,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
 
 
-############KEY GENERATION####################
+############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
+# note the keys generated are once off and are stored in the respsective users keys files but for testing we can just use this 
 def gen_private_key():
     """
     :return:
@@ -22,7 +23,6 @@ def gen_private_key():
     )
     return private_key
 
-# Generate Public Key
 def gen_public_key(private_key):
     """
     :param private_key:
@@ -30,7 +30,7 @@ def gen_public_key(private_key):
     """
     public_key = private_key.public_key()
     return public_key
-#############ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
+
 # encrypte message using other users private key
 def encrypt(message, public_key):
     """
@@ -47,7 +47,6 @@ def encrypt(message, public_key):
     )
     return cipher
 
-# Decrypt message using private key
 def decrypt(cipher, private_key):
     """
     This function takes cipher (to be decoded after decryption) and generated private key as input and returns the
@@ -66,12 +65,20 @@ def decrypt(cipher, private_key):
     return plaintext.decode("utf8")
 ###################################################################
 
-#################SECRET KEY#########################################
+#################SECRET KEY Generation, Decryption Encryption#########################################
 def generate_secret_key():
     # Generate a random 32-byte (256-bit) key
     return os.urandom(32)
 
 def encrypt_message(message, secret_key):
+    """
+    This function takes a message and a secret key as input and encrypts the message using AES-CBC mode.
+    Parameters:
+    message (str): The message to be encrypted.
+    secret_key (bytes): The secret key used for encryption.
+    Returns:
+    bytes: The IV and ciphertext.
+    """
     # Generate a random IV (Initialization Vector)
     iv = os.urandom(16)
     
@@ -86,10 +93,19 @@ def encrypt_message(message, secret_key):
     # Return the IV and ciphertext
     return iv + ciphertext
 
+
 def decrypt_message(encrypted_message, secret_key):
+    """
+    This function takes an encrypted message and a secret key as input and decrypts the message using AES-CBC mode.
+    Parameters:
+    encrypted_message (bytes): The encrypted message to be decrypted.
+    secret_key (bytes): The secret key used for decryption.
+
+    Returns:
+    bytes: The decrypted message.
+    """
     # Extract the IV from the encrypted message
     iv = encrypted_message[:16]
-
     ciphertext = encrypted_message[16:]
 
     # Create an AES cipher with CBC mode using the secret key and IV
@@ -112,7 +128,7 @@ def save_key(key, filename, key_type):
     """
     Save key to file
     """
-    with open("../keys/"+filename, "wb") as f:
+    with open("keys/"+filename, "wb") as f:
         if key_type == "private":
             f.write(key.private_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -132,7 +148,7 @@ def load_key(filename, key_type):
     """
     Load key from PEM file
     """
-    with open("../keys/"+filename, "rb") as f:
+    with open("keys/"+filename, "rb") as f:
         key_pem = f.read()
         if key_type == "private":
             key = serialization.load_pem_private_key(
@@ -151,8 +167,7 @@ def load_key(filename, key_type):
 #################################################
 
 
-
-############HASHING##############################
+############HASHING########################
 def hash(message):
     """
     This function takes a message as input and returns the hexadecimal digest of the SHA-256 hash of the message.
@@ -182,12 +197,4 @@ def verify_hash(message, hex_digest):
     """
     return hash(message) == hex_digest  # Compare the hash of the message with the given hexadecimal digest
 ##################################
-
-
-def generate_shared_key():
-
-    # Generate a random 256-bit (32-byte) shared key
-    shared_key = secrets.token_bytes(32)
-    return shared_key
-
 

@@ -31,8 +31,8 @@ def create_certificate(public_key):
     cert = cert.issuer_name(certificate_ca.subject)  # Issuer is the CA
     cert = cert.public_key(public_key)
     cert = cert.serial_number(x509.random_serial_number())
-    cert = cert.not_valid_before(datetime.datetime.utcnow())
-    cert = cert.not_valid_after(datetime.datetime.utcnow() + timedelta(days=365))  # Valid for 1 year
+    cert = cert.not_valid_before(datetime.now())
+    cert = cert.not_valid_after(datetime.now() + timedelta(days=365))  # Valid for 1 year
     cert = cert.add_extension(x509.SubjectAlternativeName([x509.DNSName(u"UCT.com")]),
         critical=False,
     )
@@ -43,7 +43,7 @@ def create_certificate(public_key):
         ca_private_key = serialization.load_pem_private_key(ca_private_key_data, password=None)
     cert = cert.sign(ca_private_key, hashes.SHA256())
     save_certificate(cert)
-    print("hello")
+ 
     return cert
 
 def save_certificate(certificate):
@@ -70,7 +70,7 @@ def verify_certificate():
             cert.signature_hash_algorithm,
         )
         print("Certificate is valid and has been verified." )
-        print(cert.public_key().public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
+        # print(cert.public_key().public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
         return (cert.public_key(), True)
     except Exception as e:
         print("Certificate verification failed:", str(e))
@@ -148,5 +148,5 @@ def create_ca_certificate():
     with open("keys/"+"ca_certificate.pem", "wb") as f:
         f.write(ca_certificate_pem)
 
-verify_certificate()
-load_ca_public_key("ca_public_key.pem")
+# verify_certificate()
+# load_ca_public_key("ca_public_key.pem")
