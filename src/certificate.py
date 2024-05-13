@@ -114,10 +114,10 @@ def create_ca_certificate():
     ).serial_number(
         x509.random_serial_number()
     ).not_valid_before(
-        datetime.datetime.utcnow()
+        datetime.now()
     ).not_valid_after(
         # Our CA is valid for 10 years
-        datetime.datetime.utcnow() + datetime.timedelta(days=3650)
+        datetime.now() + timedelta(days=365)
     ).sign(
         private_key, hashes.SHA256(), default_backend()
     )
@@ -148,5 +148,13 @@ def create_ca_certificate():
     with open("keys/"+"ca_certificate.pem", "wb") as f:
         f.write(ca_certificate_pem)
 
-# verify_certificate()
-# load_ca_public_key("ca_public_key.pem")
+#For sending certificate to someone else 
+def convert_certificate_to_bytes(certificate):
+    return certificate.public_bytes(serialization.Encoding.PEM)
+
+def load_certificate_from_bytes(certificate_bytes):
+    return load_pem_x509_certificate(certificate_bytes)
+
+
+
+

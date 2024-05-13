@@ -1,3 +1,5 @@
+import base64
+import json
 import secrets
 import cryptography
 from cryptography.hazmat.primitives.asymmetric import rsa # type: ignore
@@ -6,9 +8,11 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 import hashlib
+from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
+import compress_message
 
 
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
@@ -32,13 +36,13 @@ def gen_public_key(private_key):
     return public_key
 
 # encrypte message using other users private key
-def encrypt(message, public_key):
+def rsa_encrypt(message, public_key):
     """
     :param message:
     :param public_key:
     :return: Cipher text
     """
-    message = message.encode("utf-8")
+    # message = message.encode("utf-8")
     cipher = public_key.encrypt( message,padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
@@ -47,7 +51,7 @@ def encrypt(message, public_key):
     )
     return cipher
 
-def decrypt(cipher, private_key):
+def rsa_decrypt(cipher, private_key):
     """
     This function takes cipher (to be decoded after decryption) and generated private key as input and returns the
     plaintext.
@@ -62,7 +66,7 @@ def decrypt(cipher, private_key):
         )
     )
 
-    return plaintext.decode("utf8")
+    return plaintext
 ###################################################################
 
 #################SECRET KEY Generation, Decryption Encryption#########################################
@@ -70,31 +74,34 @@ def generate_secret_key():
     # Generate a random 32-byte (256-bit) key
     return os.urandom(32)
 
-def encrypt_message(message, secret_key):
+def aes_encrypt_message(message, secret_key):
     """
-    This function takes a message and a secret key as input and encrypts the message using AES-CBC mode.
+    Encrypts the message using AES-CBC mode.
     Parameters:
-    message (str): The message to be encrypted.
+    message (bytes): The message to be encrypted.
     secret_key (bytes): The secret key used for encryption.
     Returns:
     bytes: The IV and ciphertext.
     """
     # Generate a random IV (Initialization Vector)
     iv = os.urandom(16)
-    
-    # make the message paramter into byte form
-    message_bytes = message.encode("utf-8")
+
     # Create an AES cipher with CBC mode using the secret key and IV
     cipher = Cipher(algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend())
-    # Encrypt the message
     encryptor = cipher.encryptor()
-    #print(encryptor.update(message))
-    ciphertext = encryptor.update(message_bytes) + encryptor.finalize()
+
+    # Apply PKCS7 padding to ensure message length is a multiple of the block size
+    padder = PKCS7(algorithms.AES.block_size).padder()
+    padded_message = padder.update(message) + padder.finalize()
+
+    # Encrypt the padded message
+    ciphertext = encryptor.update(padded_message) + encryptor.finalize()
+
     # Return the IV and ciphertext
     return iv + ciphertext
 
 
-def decrypt_message(encrypted_message, secret_key):
+def aes_decrypt_message(encrypted_message, secret_key):
     """
     This function takes an encrypted message and a secret key as input and decrypts the message using AES-CBC mode.
     Parameters:
@@ -114,7 +121,6 @@ def decrypt_message(encrypted_message, secret_key):
     # Decrypt the ciphertext
     decryptor = cipher.decryptor()
     decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
-    print(decrypted_message)
     return decrypted_message
 
 ######################################################################
@@ -197,4 +203,43 @@ def verify_hash(message, hex_digest):
     """
     return hash(message) == hex_digest  # Compare the hash of the message with the given hexadecimal digest
 ##################################
+#################DECRYPTION#########################
+
+
+def decrypt_message(message, private_key):
+    session_key = (message["session_key"])
+    
+    decrypted_session_key = rsa_decrypt(session_key, private_key)
+    encrypted_file = (message["encrypted_file"])
+   
+    decrypted_file= aes_decrypt_message(encrypted_file, decrypted_session_key)
+
+    # print(decrypted_file)
+    file= compress_message.decompress_signature_and_message(decrypted_file)
+   
+    signature= file['signature']
+    digest = signature['Digest']
+    
+    message=(file["signature"])
+    
+    message = file["message"]
+
+    # print(message)
+    message = json.dumps(message)
+    message_json = json.dumps(message, sort_keys=True).encode('utf-8')
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(message_json)
+
+    # Get the hexadecimal digest of the hash
+    hex_digest = sha256_hash.hexdigest()
+    # message=message.decode()	
+   
+    print(hex_digest)
+    
+
+   
+
+       
+    # decrypted_file = aes_decrypt_message(encrypted_file, session_key)
+    # print(decrypted_file)
 
