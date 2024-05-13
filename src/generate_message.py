@@ -21,7 +21,7 @@ public_key = gen_public_key(private_key)
 # cipher takes plain text
 
 # recipe for message
-message ={'NAme': 'Gabe', 'Surname': 'Makwana', 'Age': 22}
+message =create_text()
 
 secret = generate_secret_key()
 #adds signature to message
@@ -34,6 +34,6 @@ confidential_file = generate_confidentiality(secret,compressed_file,public_key)
 
 # print(confidential_file)
 #print(secret)
-RSA_algorithm.decrypt_message(confidential_file, private_key)
+RSA_algorithm.decrypt_message_PGP(confidential_file, private_key)
 
 # radix_file = to_radix64()

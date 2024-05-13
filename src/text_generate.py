@@ -7,23 +7,21 @@ from security import generate_hash_message
 import json
 import base64
 
-# returns image filepath
-def select_image():
+  
+
+def create_text():
+    print("Select an image")
     root = tk.Tk()
     root.withdraw()
 
-    image_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
+    image = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
 
-    return image_path
+    caption = input("Enter a Caption:\n")
 
-
-# generate PGP message
-def generate_message(image_path, caption):
-
-    filename = os.path.basename(image_path)
+    filename = os.path.basename(image)
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    with open(image_path, "rb") as image:
+    with open(image, "rb") as image:
         data = image.read()
 
     # Base64 encode the image data
@@ -40,15 +38,6 @@ def generate_message(image_path, caption):
         "Data": metadata
     }
     return message
-
-
-def create_text():
-    print("Select an image")
-    image = select_image()
-
-    caption = input("Enter a Caption:\n")
-
-    return generate_message(image, caption)
 
 
 
