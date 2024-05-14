@@ -1,5 +1,6 @@
-
 import json
+import secrets
+import cryptography
 from cryptography.hazmat.primitives.asymmetric import rsa # type: ignore
 from cryptography.hazmat.primitives.asymmetric import padding # type: ignore
 from cryptography.hazmat.primitives import hashes
@@ -7,10 +8,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 import hashlib
 from cryptography.hazmat.primitives.padding import PKCS7
+from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
-
-
 
 
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
@@ -65,6 +65,7 @@ def rsa_decrypt(cipher, private_key):
     )
 
     return plaintext
+###################################################################
 
 #################SECRET KEY Generation, Decryption Encryption#########################################
 def generate_secret_key():
@@ -82,9 +83,11 @@ def aes_encrypt_message(message, secret_key):
     """
     # Generate a random IV (Initialization Vector)
     iv = os.urandom(16)
+
     # Create an AES cipher with CBC mode using the secret key and IV
     cipher = Cipher(algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend())
     encryptor = cipher.encryptor()
+
     # Apply PKCS7 padding to ensure message length is a multiple of the block size
     padder = PKCS7(algorithms.AES.block_size).padder()
     padded_message = padder.update(message) + padder.finalize()
@@ -116,11 +119,20 @@ def aes_decrypt_message(encrypted_message, secret_key):
     # Decrypt the ciphertext
     decryptor = cipher.decryptor()
     decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
+   
     return decrypted_message
 
 ######################################################################
+
+
+######################################################################
+
 ############KEY MANAGEMENT#######################
+# Save Key to file. Key is in PEM format
 def save_key(key, filename, key_type):
+    """
+    Save key to file
+    """
     with open("keys/"+filename, "wb") as f:
         if key_type == "private":
             f.write(key.private_bytes(
@@ -136,6 +148,7 @@ def save_key(key, filename, key_type):
         else:
             raise ValueError("Invalid key type. Must be 'private' or 'public'.")
 
+#Load key from PEM file 
 def load_key(filename, key_type):
     """
     Load key from PEM file
@@ -188,8 +201,6 @@ def load_key(filename, key_type):
 #     bool: True if the hexadecimal digest is the SHA-256 hash of the message, and False otherwise.
 #     """
 #     return hash(message) == hex_digest  # Compare the hash of the message with the given hexadecimal digest
-##################################
-#################DECRYPTION#########################
 
 
 
