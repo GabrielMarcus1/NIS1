@@ -1,69 +1,75 @@
 # method combining all of the security implementations to construct PGP message
 import base64
+import json
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from security_utils import gen_public_key, gen_private_key, generate_secret_key, rsa_encrypt, rsa_decrypt
-from message_utils import compress_signature_and_message, create_text, decrypt_message_PGP , generate_signature ,generate_confidentiality
-# TODO:  
-# 1. Add key rings 
+from security_utils import gen_public_key, gen_private_key, generate_secret_key
+from message_utils import (
+    compress_signature_and_message,
+    create_string,
+    generate_signature,
+    generate_confidentiality,
+)
+
+# TODO:
+# 1. Add key rings
 # 2. Create secret key (Done) ✔️
 # 3. Construct message (PGP  paradigm) (Done) ✔️
-#       3.1 Authentication  (DONE) ✔️ 
+#       3.1 Authentication  (DONE) ✔️
 #       3.2 Confidentiality (DONE) ✔️
 # 4. Hashing (DONE) ✔️
 # 5. Key management - key rings, private , public, other persons. secret...
 # 6. Certificate (DONE) ✔️
 # 7. Formatting message. (DONE) ✔️
-# 8. Report 
-# 9. Testing and debugging 
+# 8. Report
+# 9. Testing and debugging
 # 10. Refactor
-# 11. Coments  
-# 12. Handshake to establish connections 
-# 13. Network
-# 14: GUI 
+# 11. Coments
+# 12. Handshake to establish connections
+# 13. Network setup (DONE) ✔️
+# 14: GUI (DONE) ✔️
 # 15. Add more security features
-
+# 16. Make images send over network and save them
 #########################TESTING ##########################################
-#create a users public private key set
-private_key = gen_private_key()
-public_key = gen_public_key(private_key)
+# create a users public private key set
+# private_key = gen_private_key()
+# public_key = gen_public_key(private_key)
 
-private_key_bytes = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption()
-    )
-print(private_key_bytes)
-
-
+# private_key_bytes = private_key.private_bytes(
+#     encoding=serialization.Encoding.PEM,
+#     format=serialization.PrivateFormat.TraditionalOpenSSL,
+#     encryption_algorithm=serialization.NoEncryption(),
+# )
 
 ########################################################################################
-private_key = gen_private_key()
-public_key = gen_public_key(private_key)
 
-# print(private_key)
-# print(public_key)
 
-# cipher takes plain text
+def constuct_pgp_message(message, private_key,public_key):
+    message = create_string(message)
+    # print("The message is: ",message)
+    messsages = json.dumps(message)
+    # print("the next message is: ", messsages)
+    secret = generate_secret_key()
+    # adds signature to message
+    signed = generate_signature(public_key, messsages)
+    # print("The signed message is: ",signed)
+    compressed_file = compress_signature_and_message(signed, messsages)
+    # print("The compressed file is: ",compressed_file)
+    confidential_file = generate_confidentiality(secret, compressed_file, public_key)
+    # print("The confidential file is: ",confidential_file)
 
-# recipe for message
-message =create_text()
+    return confidential_file
 
-secret = generate_secret_key()
-#adds signature to message
-signed = generate_signature(public_key,message)
 
-compressed_file = compress_signature_and_message(signed, message)
-
-# add confidentiality
-confidential_file = generate_confidentiality(secret,compressed_file,public_key)
+#
+# fille= constuct_pgp_image("Hello World",private_key)
 
 # print(confidential_file)
-#print(secret)
-decrypt_message_PGP(confidential_file, private_key)
+# print(secret)
+# decrypt_message_PGP(fille, private_key)
 
-# radix_file = to_radix64()
 ####################################################################################
+
 
 # ##########Testing 1########################
 # # We are going to use the public and private keys in our key files
@@ -92,5 +98,3 @@ decrypt_message_PGP(confidential_file, private_key)
 # pub_keys= certificate.verify_certificate()[0]
 # if(pub_keys==pub_key):
 #     print("Certificate verified")
-
-
