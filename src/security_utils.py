@@ -55,16 +55,23 @@ def rsa_decrypt(cipher, private_key):
     plaintext.
     Returns: plaintext
     """
-    plaintext = private_key.decrypt(
-        cipher,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        )
-    )
+    try:
 
+        plaintext = private_key.decrypt(
+            cipher,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+    except:
+        print("Error decrypting the message")
+        plaintext="error incorrect key used in decrypting message"
     return plaintext
+
+
+    
 ###################################################################
 
 #################SECRET KEY Generation, Decryption Encryption#########################################
@@ -115,11 +122,11 @@ def aes_decrypt_message(encrypted_message, secret_key):
 
     # Create an AES cipher with CBC mode using the secret key and IV
     cipher = Cipher(algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend())
-
+    
     # Decrypt the ciphertext
     decryptor = cipher.decryptor()
     decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
-   
+    print("The cipher is: ",decrypted_message)
     return decrypted_message
 
 ######################################################################

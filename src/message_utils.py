@@ -103,8 +103,10 @@ def compress_signature_and_message(signature, message):
     # Concatenate signature and message bytes with a separator
     combined_data = (signature_bytes + "|" + message_bytes).encode("utf-8")
 
+   
     # Compress the combined data
     compressed_data = zlib.compress(combined_data)
+    
     return compressed_data
 
 def decompress_signature_and_message(compressed_data):
@@ -138,6 +140,8 @@ def decompress_signature_and_message(compressed_data):
 
 # Creates a new message with encrypted PUb + Ks and Ks, X
 
+def create_header(message_length):
+    return message_length.to_bytes(4, byteorder='big')
 
 # generates message with encrpted secret key and encrypted message
 def generate_confidentiality(secret_key, message, public_key):
@@ -148,65 +152,76 @@ def generate_confidentiality(secret_key, message, public_key):
     # encryptes secret key using rsa
     rsa_encryption = rsa_encrypt(secret_key, public_key)
 
-    data = {
-        "session_key": rsa_encryption,
-        "encrypted_file": aes_encryption
-    }
+    
+    
+
+    # data = {
+    #     "session_key": rsa_encryption,
+    #     "encrypted_file": aes_encryption
+    # }
+    header= len(rsa_encryption).to_bytes(4, byteorder='big')
+    data =header+ rsa_encryption+ aes_encryption
 
     return data
 
-
 def decrypt_message_PGP(message, private_key):
-    session_key = (message["session_key"])
-    
-    decrypted_session_key = rsa_decrypt(session_key, private_key)
-    encrypted_file = (message["encrypted_file"])
-   
-    decrypted_file= aes_decrypt_message(encrypted_file, decrypted_session_key)
-
-    # print(decrypted_file)
-    file= decompress_signature_and_message(decrypted_file)
-   
+    header = message[:4]
+    message_length = int.from_bytes(header, byteorder='big')
+    encrypted_message = message[4:4+ message_length]
+    decrypted_session_key = rsa_decrypt(encrypted_message, private_key)
+    # print("Decrypted Session Key: ", decrypted_session_key)
+    encrypted_file_start=4+ message_length
+    encrypted_message = message[encrypted_file_start:]
+    decrypted_message= aes_decrypt_message(encrypted_message, decrypted_session_key)
+    print("Decrypted message: ",  decrypted_message)
+    file= decompress_signature_and_message(decrypted_message)
+    # print(file)
     signature= file['signature']
     digest = signature['Digest']
-    
-    message=(file["signature"])
-    print(message)
-    
     message = file["message"]
-
-    # print(message)
-    message = json.dumps(message)
-    message_json = json.dumps(message, sort_keys=True).encode('utf-8')
-    sha256_hash = hashlib.sha256()
-    sha256_hash.update(message_json)
-
-    # Get the hexadecimal digest of the hash
-    hex_digest = sha256_hash.hexdigest()
-    # message=message.decode()	
-   
-    print(hex_digest)
+    json_data= (json.loads(message)) # json of the acrtual message we wanted to send
+    caption= json_data['Data']['Caption']
+    image= json_data['Data']['Image']
+    return (image)
+    # print(hex_digest)
     
 
 
 
-def create_text():
-    print("Select an image")
-    root = tk.Tk()
-    root.withdraw()
+def create_string(message):
+    data_b64 =  message
 
-    image = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
 
-    caption = input("Enter a Caption:\n")
+    metadata = {
+        "Caption": "words",
+        "Image": data_b64
+    }
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    message = {
+         "Filename": "MESSAGE",
+         "Timestamp": timestamp,
+        "Data": metadata
+    }
+    return message
 
-    filename = os.path.basename(image)
+
+def create_image_message(message, caption):
+    # print("Select an image")
+    # root = tk.Tk()
+    # root.withdraw()
+
+    # image = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
+
+    # caption = input("Enter a Caption:\n")
+
+    # fileName = os.path.basename(fileName)
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    with open(image, "rb") as image:
-        data = image.read()
+    # with open(image, "rb") as image:
+    #     data = image.read()
 
     # Base64 encode the image data
-    data_b64 = base64.b64encode(data).decode('utf-8')
+    data_b64 = base64.b64encode(message).decode('utf-8')
 
     metadata = {
         "Caption": caption,
@@ -214,10 +229,15 @@ def create_text():
     }
 
     message = {
-        "Filename": filename,
+        "Filename": "fileName",
         "Timestamp": timestamp,
         "Data": metadata
     }
     return message
 
 
+def save_file(image_data):
+         file_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG files", "*.jpg"), ("All files", "*.*")])
+         if file_path: 
+            with open("keys/file.png", "wb") as file:
+                file.write(image_data)
