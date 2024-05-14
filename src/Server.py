@@ -1,11 +1,7 @@
 import socket
-import pickle
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives import serialization, rsa
+import base64
 
 class Server:
     def __init__(self, host, port):
@@ -18,7 +14,6 @@ class Server:
             backend=default_backend()
         )
         self.server_public_key = self.server_private_key.public_key()
-        self.ca_public_key = None
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def start(self):
@@ -27,36 +22,40 @@ class Server:
         print(f"Server listening on {self.host}:{self.port}")
         while True:
             client_socket, _ = self.socket.accept()
-            client = ClientConnection(client_socket, self.server_private_key, self.server_public_key)
-            self.clients.append(client)
-            client.start()
+            print("Client connected")
+            self.handle_client(client_socket)
 
-class ClientConnection:
-    def __init__(self, socket, server_private_key, server_public_key):
-        self.socket = socket
-        self.server_private_key = server_private_key
-        self.server_public_key = server_public_key
-        self.client_public_key = None
-        self.shared_key = None
+    def handle_client(self, client_socket):
+        try:
+            while True:
+                data_type = client_socket.recv(1024).decode()
+                if data_type == 'TEXT':
+                    self.handle_text(client_socket)
+                elif data_type == 'IMAGE':
+                    self.handle_image(client_socket)
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            client_socket.close()
+            print("Client disconnected")
 
-    def start(self):
-        self.exchange_public_keys()
-        self.exchange_shared_key()
+    def handle_text(self, client_socket):
+        text_length = int(client_socket.recv(1024).decode())
+        text_data = client_socket.recv(text_length).decode()
+        print("Received text:", text_data)
 
-    def exchange_public_keys(self):
-        self.socket.send(self.server_public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        ))
-        client_public_key_bytes = self.socket.recv(4096)
-        self.client_public_key = serialization.load_pem_public_key(
-            client_public_key_bytes,
-            backend=default_backend()
-        )
-
-    def exchange_shared_key(self):
-        shared_key = b'SharedKey'  
-        self.socket.send(shared_key)
+    def handle_image(self, client_socket):
+        file_length = int(client_socket.recv(1024).decode())
+        image_data = b''
+        while len(image_data) < file_length:
+            packet = client_socket.recv(1024)
+            if not packet:
+                break
+            image_data += packet
+        image_data = base64.b64decode(image_data)
+        with open('received_image.png', 'wb') as image_file:
+            image_file.write(image_data)
+        print("Image received and saved")
 
 def main():
     server = Server("localhost", 12345)
