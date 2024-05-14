@@ -1,4 +1,3 @@
-
 import json
 import secrets
 import cryptography
@@ -12,8 +11,6 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
-
-
 
 
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
@@ -37,13 +34,13 @@ def gen_public_key(private_key):
     return public_key
 
 # encrypte message using other users private key
-def encrypt(message, public_key):
+def rsa_encrypt(message, public_key):
     """
     :param message:
     :param public_key:
     :return: Cipher text
     """
-    message = message.encode("utf-8")
+    # message = message.encode("utf-8")
     cipher = public_key.encrypt( message,padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
@@ -52,7 +49,7 @@ def encrypt(message, public_key):
     )
     return cipher
 
-def decrypt(cipher, private_key):
+def rsa_decrypt(cipher, private_key):
     """
     This function takes cipher (to be decoded after decryption) and generated private key as input and returns the
     plaintext.
@@ -68,7 +65,6 @@ def decrypt(cipher, private_key):
     )
 
     return plaintext
-    return plaintext.decode("utf8")
 ###################################################################
 
 #################SECRET KEY Generation, Decryption Encryption#########################################
@@ -76,24 +72,22 @@ def generate_secret_key():
     # Generate a random 32-byte (256-bit) key
     return os.urandom(32)
 
-def encrypt_message(message, secret_key):
+def aes_encrypt_message(message, secret_key):
     """
-    This function takes a message and a secret key as input and encrypts the message using AES-CBC mode.
+    Encrypts the message using AES-CBC mode.
     Parameters:
-    message (str): The message to be encrypted.
+    message (bytes): The message to be encrypted.
     secret_key (bytes): The secret key used for encryption.
     Returns:
     bytes: The IV and ciphertext.
     """
     # Generate a random IV (Initialization Vector)
     iv = os.urandom(16)
-    
-    # make the message paramter into byte form
-    message_bytes = message.encode("utf-8")
+
     # Create an AES cipher with CBC mode using the secret key and IV
     cipher = Cipher(algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend())
-    # Encrypt the message
     encryptor = cipher.encryptor()
+
     # Apply PKCS7 padding to ensure message length is a multiple of the block size
     padder = PKCS7(algorithms.AES.block_size).padder()
     padded_message = padder.update(message) + padder.finalize()
@@ -101,13 +95,11 @@ def encrypt_message(message, secret_key):
     # Encrypt the padded message
     ciphertext = encryptor.update(padded_message) + encryptor.finalize()
 
-    #print(encryptor.update(message))
-    ciphertext = encryptor.update(message_bytes) + encryptor.finalize()
     # Return the IV and ciphertext
     return iv + ciphertext
 
 
-def decrypt_message(encrypted_message, secret_key):
+def aes_decrypt_message(encrypted_message, secret_key):
     """
     This function takes an encrypted message and a secret key as input and decrypts the message using AES-CBC mode.
     Parameters:
@@ -127,7 +119,7 @@ def decrypt_message(encrypted_message, secret_key):
     # Decrypt the ciphertext
     decryptor = cipher.decryptor()
     decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
-    print(decrypted_message)
+   
     return decrypted_message
 
 ######################################################################
@@ -181,11 +173,11 @@ def load_key(filename, key_type):
 
 
 ############HASHING########################
-def hash(message):
-    """
-    This function takes a message as input and returns the hexadecimal digest of the SHA-256 hash of the message.
-    Parameters:
-    message (str): The message to be hashed.
+# def hash(message):
+#     """
+#     This function takes a message as input and returns the hexadecimal digest of the SHA-256 hash of the message.
+#     Parameters:
+#     message (str): The message to be hashed.
 
 #     Returns:
 #     str: The hexadecimal digest of the SHA-256 hash of the message.
@@ -209,8 +201,6 @@ def hash(message):
 #     bool: True if the hexadecimal digest is the SHA-256 hash of the message, and False otherwise.
 #     """
 #     return hash(message) == hex_digest  # Compare the hash of the message with the given hexadecimal digest
-##################################
-#################DECRYPTION#########################
 
 
 

@@ -1,6 +1,6 @@
 import socket
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, rsa
+from cryptography.hazmat.primitives import serialization
 import base64
 from security_utils import gen_private_key
 
@@ -55,7 +55,7 @@ class Server:
         print("Image received and saved")
 
 def main():
-    server = Server("localhost", 12345)
+    server = Server("localhost", 8000)
     server.start()
 
 if __name__ == "__main__":
