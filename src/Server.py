@@ -2,6 +2,7 @@ import socket
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, rsa
 import base64
+from security_utils import gen_private_key
 
 class Server:
     def __init__(self, host, port):

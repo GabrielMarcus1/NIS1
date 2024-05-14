@@ -10,7 +10,7 @@ class TestCertificateFunctions(unittest.TestCase):
 
     def setUp(self): 
         # Generate CA certificate for testing
-    #    create_ca_certificate()
+       create_ca_certificate()
 
     def tearDown(self):
         # Clean up generated files after each test
