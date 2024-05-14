@@ -3,7 +3,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 
-from certificate import (load_ca_public_key, create_certificate, save_certificate,
+from certificate_utils import (load_ca_public_key, create_certificate, save_certificate,
                          verify_certificate, load_certificate, create_ca_certificate)
 
 class TestCertificateFunctions(unittest.TestCase):

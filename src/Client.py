@@ -4,7 +4,8 @@ import tkinter as tk
 from tkinter import simpledialog, filedialog, messagebox
 import base64
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, rsa
+from cryptography.hazmat.primitives import serialization
+from security_utils import gen_private_key
 
 class Client:
     def __init__(self, master, host, port):
@@ -12,11 +13,7 @@ class Client:
         self.host = host
         self.port = port
         self.setup_ui()
-        self.client_private_key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048,
-            backend=default_backend()
-        )
+        self.client_private_key = gen_private_key()
         self.client_public_key = self.client_private_key.public_key()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect()
