@@ -12,24 +12,27 @@ from message_utils import (
 )
 
 # TODO:
-# 1. Add key rings
+# 1. Add key rings (CHIVES)
 # 2. Create secret key (Done) ✔️
 # 3. Construct message (PGP  paradigm) (Done) ✔️
 #       3.1 Authentication  (DONE) ✔️
 #       3.2 Confidentiality (DONE) ✔️
 # 4. Hashing (DONE) ✔️
-# 5. Key management - key rings, private , public, other persons. secret...
+# 5. Key management - key rings, private , public, other persons. secret... (CHIVES)
 # 6. Certificate (DONE) ✔️
 # 7. Formatting message. (DONE) ✔️
-# 8. Report
-# 9. Testing and debugging
+# 8. Report (ALL)
+# 9. Testing and debugging (ONGOING) (UNIT TESTS)
 # 10. Refactor
-# 11. Coments
-# 12. Handshake to establish connections
+# 11. Coments ()
+# 12. Handshake to establish connections (CHIVES)
 # 13. Network setup (DONE) ✔️
 # 14: GUI (DONE) ✔️
 # 15. Add more security features
-# 16. Make images send over network and save them
+# 16. Make images send over network and save them (DONE) ✔️
+
+
+
 #########################TESTING ##########################################
 # create a users public private key set
 # private_key = gen_private_key()
@@ -44,7 +47,7 @@ from message_utils import (
 ########################################################################################
 
 
-def constuct_pgp_message(message, private_key,public_key):
+def constuct_pgp_message(message, private_key, public_key):
     message = create_string(message)
     # print("The message is: ",message)
     messsages = json.dumps(message)
@@ -57,10 +60,22 @@ def constuct_pgp_message(message, private_key,public_key):
     # print("The compressed file is: ",compressed_file)
     confidential_file = generate_confidentiality(secret, compressed_file, public_key)
     # print("The confidential file is: ",confidential_file)
-
     return confidential_file
 
-
+def constuct_pgp_image_message(message, private_key, public_key):
+    message = create_string(message)
+    # print("The message is: ",message)
+    messsages = json.dumps(message)
+    # print("the next message is: ", messsages)
+    secret = generate_secret_key()
+    # adds signature to message
+    signed = generate_signature(private_key, messsages, public_key)
+    # print("The signed message is: ",signed)
+    compressed_file = compress_signature_and_message(signed, messsages)
+    # print("The compressed file is: ",compressed_file)
+    confidential_file = generate_confidentiality(secret, compressed_file, public_key)
+    # print("The confidential file is: ",confidential_file)
+    return confidential_file
 #
 # fille= constuct_pgp_image("Hello World",private_key)
 
