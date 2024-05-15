@@ -12,34 +12,25 @@ from message_utils import (
 )
 
 # TODO:
-# 1. Add key rings
+# 1. Add key rings (CHIVES)
 # 2. Create secret key (Done) ✔️
 # 3. Construct message (PGP  paradigm) (Done) ✔️
 #       3.1 Authentication  (DONE) ✔️
 #       3.2 Confidentiality (DONE) ✔️
 # 4. Hashing (DONE) ✔️
-# 5. Key management - key rings, private , public, other persons. secret...
+# 5. Key management - key rings, private , public, other persons. secret... (CHIVES)
 # 6. Certificate (DONE) ✔️
 # 7. Formatting message. (DONE) ✔️
-# 8. Report
-# 9. Testing and debugging
+# 8. Report (ALL)
+# 9. Testing and debugging (ONGOING) (UNIT TESTS)
 # 10. Refactor
-# 11. Coments
-# 12. Handshake to establish connections
+# 11. Coments ()
+# 12. Handshake to establish connections (CHIVES)
 # 13. Network setup (DONE) ✔️
 # 14: GUI (DONE) ✔️
 # 15. Add more security features
-# 16. Make images send over network and save them
+# 16. Make images send over network and save them (DONE) ✔️
 
-
-
-
-#TODO
-# make a pgp for images
-# make a pgp for strings
-# add a json ass a header for sending first message so it knows what path to take
-# extrract only the relevant stuff in each instance 
-# make a byte streaming thing for the images 
 
 
 #########################TESTING ##########################################

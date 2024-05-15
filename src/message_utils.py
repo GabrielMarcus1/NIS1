@@ -3,7 +3,7 @@
 import hashlib
 from datetime import datetime
 from cryptography.hazmat.primitives import serialization
-from security_utils import aes_decrypt_message, generate_hash_message, hash_message, rsa_decrypt
+from security_utils import aes_decrypt_message, generate_hash_message, hash_message, rsa_decrypt, verify_hash
 import os
 from datetime import datetime
 import tkinter as tk
@@ -218,16 +218,20 @@ def decrypt_message_PGP_image(message, private_key):
     signature= file['signature']
     digest = signature['Digest']
     message = file["message"]
+
+    verify_digest = verify_hash(message, digest)
+    
+    if verify_digest == True:
+        print("The message has been verified and the hash is correct")
+    else:
+        print("The message has not been verified and the hash is incorrect. Message may have been tampered with")
+    
     json_data= (json.loads(message)) # json of the acrtual message we wanted to send
     caption= json_data['Data']['Caption']
     image= json_data['Data']['Image']
 
     return (image)
     # print(hex_digest)
-
-
-
-
 
 
 def decrypt_message_PGP(message, private_key):

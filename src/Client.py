@@ -144,31 +144,7 @@ class GUIClient:
 
   
 
-    # def send_image_message(self):
-    #     file_path = filedialog.askopenfilename()
-    #     with open(file_path, "rb") as file:
-    #         image_data = file.read()
-    #     data= base64.b64encode(image_data)
-        
-    #     # image= data.encode("utf-8")
-    #     # message = constuct_pgp_message(message, self.client_private_key,self.client_public_key)
-    #     self.socket.send(data)
-
-    # def receive_messages(self):
-    #     while True:
-    #         try:
-    #             message = self.socket.recv(4096)
-    #             output = decrypt_message_PGP(message, self.client_private_key)
-    #             # print("The output is: ",output)
-    #             if output:
-    #                 self.text_area.config(state=tk.NORMAL)
-    #                 self.text_area.insert(tk.END, output + "\n")
-    #                 self.text_area.config(state=tk.DISABLED)
-    #             else:
-    #                 break
-    #         except Exception as e:
-    #             print(f"Error receiving message: {e}")
-    #             break
+ 
 
     def send_image_message(self):
         file_path = filedialog.askopenfilename()
@@ -224,17 +200,18 @@ class GUIClient:
     def receive_image_message(self, image_size):
         received_chunks = b''
         while(image_size >0):
-            recievedData= b''
-            # chunk = clientSocket.recv(min(BLOCKSIZE, file_size))
+            
             chunk=self.socket.recv(min(CHUNK_SIZE, image_size))
             if not chunk:
                 break
-            recievedData+= chunk
+            received_chunks+= chunk
             image_size -= len(chunk)
-        data_json= decrypt_message_PGP(recievedData, self.client_private_key)
+        data_json= decrypt_message_PGP(received_chunks, self.client_private_key)
         data=json.loads(data_json)
         image= data['Image']
+        caption= data['Caption']
         image_data = base64.b64decode(image)
+        self.text_area.insert(tk.END, caption + "\n")
         self.save_image_message(image_data)
 
 
@@ -270,7 +247,7 @@ def main():
     os.makedirs("photos", exist_ok=True)
 
     root = tk.Tk()
-    client = GUIClient(root, "localhost", 8050)
+    client = GUIClient(root, "localhost", 8060)
     root.mainloop()
 
 

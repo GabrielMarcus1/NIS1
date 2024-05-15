@@ -258,7 +258,10 @@ def verify_hash(message, hex_digest):
     Returns:
     bool: True if the hexadecimal digest is the SHA-256 hash of the message, and False otherwise.
     """
-    return hash(message) == hex_digest  # Compare the hash of the message with the given hexadecimal digest
+    # converts hashed message to hex
+    message = hash_message(message).encode("utf-8")
+    message = message.hex()
+# Compare the hash of the message with the given hexadecimal digest
 
 
 # creates message with hex digest
