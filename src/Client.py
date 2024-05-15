@@ -110,15 +110,23 @@ import os
 from tkinter import simpledialog
 from generate_message import constuct_pgp_message
 from message_utils import create_string, decrypt_message_PGP, save_file
-from security_utils import gen_private_key, gen_public_key, load_key 
+from security_utils import load_key, gen_private_key, gen_public_key, save_key
+
 
 class GUIClient:
-    def __init__(self, master, host, port):
+    def __init__(self, master, host, port, private_key_path="private_key.pem", public_key_path="public_key.pem"):
         self.master = master
         self.host = host
         self.port = port
-        self.client_private_key = load_key("private_key.pem", "private")
-        self.client_public_key = load_key("public_key.pem", "public")
+        try:
+            self.client_private_key = load_key(private_key_path, "private")
+            self.client_public_key = load_key(public_key_path, "public")
+        except FileNotFoundError:
+            # Generate new keys if not found
+            self.client_private_key = gen_private_key()
+            self.client_public_key = self.client_private_key.public_key()
+            save_key(self.client_private_key, private_key_path, "private")
+            save_key(self.client_public_key, public_key_path, "public")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.setup_ui()

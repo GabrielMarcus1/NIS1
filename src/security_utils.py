@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
 
 
+
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
 # note the keys generated are once off and are stored in the respsective users keys files but for testing we can just use this 
 def gen_private_key():
@@ -155,27 +156,7 @@ def save_key(key, filename, key_type):
         else:
             raise ValueError("Invalid key type. Must be 'private' or 'public'.")
 
-#Load key from PEM file 
-def load_key(filename, key_type):
-    """
-    Load key from PEM file
-    """
-    with open("keys/"+filename, "rb") as f:
-        key_pem = f.read()
-        if key_type == "private":
-            key = serialization.load_pem_private_key(
-                key_pem,
-                password=None,  # No password protection
-                backend=default_backend()
-            )
-        elif key_type == "public":
-            key = serialization.load_pem_public_key(
-                key_pem,
-                backend=default_backend()
-            )
-        else:
-            raise ValueError("Invalid key type. Must be 'private' or 'public'.")
-    return key
+
 #################################################
 
 
@@ -208,13 +189,6 @@ def load_key(filename, key_type):
 #     bool: True if the hexadecimal digest is the SHA-256 hash of the message, and False otherwise.
 #     """
 #     return hash(message) == hex_digest  # Compare the hash of the message with the given hexadecimal digest
-
-
-
-    
-
-   
-
 
 def hash(message):
     """
@@ -262,3 +236,11 @@ def generate_hash_message(message):
     }
 
     return message
+
+def load_key(key_path, key_type):
+    with open(key_path, "rb") as key_file:
+        key_data = key_file.read()
+        if key_type == "private":
+            return serialization.load_pem_private_key(key_data, password=None, backend=default_backend())
+        elif key_type == "public":
+            return serialization.load_pem_public_key(key_data, backend=default_backend())

@@ -5,13 +5,33 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.x509.oid import NameOID
 from datetime import datetime, timedelta
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
-def load_ca_public_key(filename):
-    with open("keys/"+filename, "rb") as f:
-        ca_public_key_data = f.read()
-        ca_public_key = serialization.load_pem_public_key(ca_public_key_data)
-        print(ca_public_key)
-        return ca_public_key
+
+def load_ca_public_key(ca_cert_path):
+    with open(ca_cert_path, "rb") as file:
+        ca_public_key_data = file.read()
+        return serialization.load_pem_public_key(ca_public_key_data)
+
+def verify_certificate(cert_path, ca_cert_path):
+    ca_public_key = load_ca_public_key(ca_cert_path)
+    with open(cert_path, "rb") as file:
+        cert_data = file.read()
+        cert = load_pem_x509_certificate(cert_data)
+
+    try:
+        ca_public_key.verify(
+            cert.signature,
+            cert.tbs_certificate_bytes,
+            padding.PKCS1v15(),
+            cert.signature_hash_algorithm
+        )
+        print("Certificate is valid and has been verified.")
+        return cert.public_key()
+    except Exception as e:
+        print("Certificate verification failed:", e)
+        return None
 
 def create_certificate(public_key):
     ca_public_key=load_ca_public_key("ca_public_key.pem")
@@ -49,31 +69,7 @@ def save_certificate(certificate):
      with open("keys/"+"your_cert.pem", "wb") as f:
         f.write(certificate.public_bytes(serialization.Encoding.PEM))
 
-def verify_certificate():
-# Load the CA's public key from a file (assuming you have it)
 
-    with open("keys/"+ "ca_public_key.pem", "rb") as f:
-        ca_public_key_data = f.read()
-        ca_public_key = serialization.load_pem_public_key(ca_public_key_data)
-   
-    with open("keys/"+ "your_cert.pem", "rb") as f:
-        cert_data = f.read()
-        cert = load_pem_x509_certificate(cert_data)
-
-    # Verify the certificate
-    try:
-        ca_public_key.verify(
-            cert.signature,
-            cert.tbs_certificate_bytes,
-            padding.PKCS1v15(),
-            cert.signature_hash_algorithm,
-        )
-        print("Certificate is valid and has been verified." )
-        # print(cert.public_key().public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
-        return (cert.public_key(), True)
-    except Exception as e:
-        print("Certificate verification failed:", str(e))
-        return ("Error", False)
 
 def load_certificate(filename):  
     
@@ -153,6 +149,13 @@ def convert_certificate_to_bytes(certificate):
 def load_certificate_from_bytes(certificate_bytes):
     return load_pem_x509_certificate(certificate_bytes)
 
+def extract_public_key_from_certificate(cert_path):
+    from cryptography import x509
+    from cryptography.hazmat.backends import default_backend
+    
+    with open(cert_path, 'rb') as f:
+        cert = x509.load_pem_x509_certificate(f.read(), default_backend())
+        return cert.public_key()
 
 
 
