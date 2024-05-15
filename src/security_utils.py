@@ -190,7 +190,7 @@ def save_key(key, filename, key_type):
 #     """
 #     return hash(message) == hex_digest  # Compare the hash of the message with the given hexadecimal digest
 
-def hash(message):
+def hash_message(message):
     """
     This function takes a message as input and returns the hexadecimal digest of the SHA-256 hash of the message.
     Parameters:
@@ -238,7 +238,7 @@ def generate_hash_message(message):
     return message
 
 def load_key(key_path, key_type):
-    with open(key_path, "rb") as key_file:
+    with open("keys/"+key_path, "rb") as key_file:
         key_data = key_file.read()
         if key_type == "private":
             return serialization.load_pem_private_key(key_data, password=None, backend=default_backend())

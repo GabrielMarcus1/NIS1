@@ -51,7 +51,7 @@ def constuct_pgp_message(message, private_key,public_key):
     # print("the next message is: ", messsages)
     secret = generate_secret_key()
     # adds signature to message
-    signed = generate_signature(public_key, messsages)
+    signed = generate_signature(private_key, messsages, public_key)
     # print("The signed message is: ",signed)
     compressed_file = compress_signature_and_message(signed, messsages)
     # print("The compressed file is: ",compressed_file)

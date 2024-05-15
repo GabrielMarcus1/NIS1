@@ -103,7 +103,7 @@ class Server:
             threading.Thread(target=self.handle_client, args=(client_socket,)).start()
 
 def main():
-    server = Server("localhost", 8040)
+    server = Server("localhost", 8050)
     server.start()
 
 if __name__ == "__main__":
