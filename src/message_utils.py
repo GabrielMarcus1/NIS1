@@ -3,7 +3,7 @@
 import hashlib
 from datetime import datetime
 from cryptography.hazmat.primitives import serialization
-from security_utils import aes_decrypt_message, generate_hash_message, rsa_decrypt
+from security_utils import aes_decrypt_message, generate_hash_message, hash_message, rsa_decrypt
 import os
 from datetime import datetime
 import tkinter as tk
@@ -14,6 +14,9 @@ import zlib
 import json
 from security_utils import aes_encrypt_message, rsa_encrypt
 import json
+
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 def generate_key_id (public_key):
     fingerprint = generate_fingerprint(public_key)
     # Extract the Key ID (last 8 bytes of the fingerprint)
@@ -31,17 +34,50 @@ def generate_fingerprint(public_key):
     return fingerprint
 
 # generating message signature
-def generate_signature(public_key, message):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    key_id = generate_key_id(public_key)
-    digest = generate_hash_message(message)
-    signature = {
-        "Timestamp": timestamp,
-        "Key_ID": key_id,
-        "Digest": digest  # Include the hash digest in the signature
-    }
-    return signature
+# generates Signed Data
+def generate_signature(private_key, message, public_key):
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        key_id = generate_key_id(public_key)
 
+        # hash_message is just the hash method in security.utils -> changed cause "hash" is a reserved word
+        digest = hash_message(message).encode("utf8")
+
+
+        # Message Digest Signed
+        signature = private_key.sign(
+            digest,
+            padding.PKCS1v15(),
+            hashes.SHA256()
+        )
+
+
+        signed_data = {
+            "Timestamp": timestamp,
+            "Key_ID": key_id,
+            "Digest": digest.hex(),
+            "Signature": signature.hex()
+
+        }
+        return signed_data
+
+def verify_signature(public_key, digest, signature):
+    # converts from Hex to bytes
+    signature = bytes.fromhex(signature)
+
+    # converts the digest to bytes
+    digest = bytes.fromhex(digest)
+
+    try:
+        public_key.verify(
+            signature,
+            digest,
+            padding.PKCS1v15(),
+            hashes.SHA256()
+        )
+        return True  # Signature is valid
+    except Exception as e:
+        print(f"Signature verification failed: {e}")
+        return False  # Signature is invalid
 
 def create_message_data():
     print("Select an image")
@@ -152,9 +188,6 @@ def generate_confidentiality(secret_key, message, public_key):
     # encryptes secret key using rsa
     rsa_encryption = rsa_encrypt(secret_key, public_key)
 
-    
-    
-
     # data = {
     #     "session_key": rsa_encryption,
     #     "encrypted_file": aes_encryption
@@ -167,15 +200,18 @@ def generate_confidentiality(secret_key, message, public_key):
 def decrypt_message_PGP(message, private_key):
     header = message[:4]
     message_length = int.from_bytes(header, byteorder='big')
-    encrypted_message = message[4:4+ message_length]
+    print(message_length)
+    encrypted_message = message[4:4+message_length]
+    print("Encrypted Session Key: ", encrypted_message)
+    
     decrypted_session_key = rsa_decrypt(encrypted_message, private_key)
-    # print("Decrypted Session Key: ", decrypted_session_key)
+    print("Decrypted Session Key: ", decrypted_session_key)
     encrypted_file_start=4+ message_length
     encrypted_message = message[encrypted_file_start:]
     decrypted_message= aes_decrypt_message(encrypted_message, decrypted_session_key)
     print("Decrypted message: ",  decrypted_message)
     file= decompress_signature_and_message(decrypted_message)
-    # print(file)
+    print(file)
     signature= file['signature']
     digest = signature['Digest']
     message = file["message"]
