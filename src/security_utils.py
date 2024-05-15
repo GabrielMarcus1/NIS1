@@ -34,7 +34,7 @@ def gen_public_key(private_key):
     public_key = private_key.public_key()
     return public_key
 
-# encrypte message using other users private key
+# encrypte message using other users public key
 def rsa_encrypt(message, public_key):
     """
     :param message:
@@ -48,11 +48,12 @@ def rsa_encrypt(message, public_key):
             label=None
         )
     )
+    print("Secret key encrypted")
     return cipher
 
 def rsa_decrypt(cipher, private_key):
     """
-    This function takes cipher (to be decoded after decryption) and generated private key as input and returns the
+    This function takes encrypted data and your private key as input and returns the
     plaintext.
     Returns: plaintext
     """
@@ -78,6 +79,7 @@ def rsa_decrypt(cipher, private_key):
 #################SECRET KEY Generation, Decryption Encryption#########################################
 def generate_secret_key():
     # Generate a random 32-byte (256-bit) key
+    print("Generating the secret key")
     return os.urandom(32)
 
 def aes_encrypt_message(message, secret_key):
@@ -102,10 +104,33 @@ def aes_encrypt_message(message, secret_key):
 
     # Encrypt the padded message
     ciphertext = encryptor.update(padded_message) + encryptor.finalize()
-
+    print("Encrypted message using the secret key")
     # Return the IV and ciphertext
     return iv + ciphertext
 
+
+# def aes_decrypt_message(encrypted_message, secret_key):
+#     """
+#     This function takes an encrypted message and a secret key as input and decrypts the message using AES-CBC mode.
+#     Parameters:
+#     encrypted_message (bytes): The encrypted message to be decrypted.
+#     secret_key (bytes): The secret key used for decryption.
+
+#     Returns:
+#     bytes: The decrypted message.
+#     """
+#     # Extract the IV from the encrypted message
+#     iv = encrypted_message[:16]
+#     ciphertext = encrypted_message[16:]
+
+#     # Create an AES cipher with CBC mode using the secret key and IV
+#     cipher = Cipher(algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend())
+    
+#     # Decrypt the ciphertext
+#     decryptor = cipher.decryptor()
+#     decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
+#     print("The cipher is: ",decrypted_message)
+#     return decrypted_message
 
 def aes_decrypt_message(encrypted_message, secret_key):
     """
@@ -121,13 +146,23 @@ def aes_decrypt_message(encrypted_message, secret_key):
     iv = encrypted_message[:16]
     ciphertext = encrypted_message[16:]
 
+    try:
     # Create an AES cipher with CBC mode using the secret key and IV
-    cipher = Cipher(algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend())
+       cipher = Cipher(algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend())
     
     # Decrypt the ciphertext
-    decryptor = cipher.decryptor()
-    decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
-    print("The cipher is: ",decrypted_message)
+       decryptor = cipher.decryptor()
+       decrypted_padded_message = decryptor.update(ciphertext) + decryptor.finalize()
+
+    # Remove PKCS7 padding
+       unpadder = PKCS7(algorithms.AES.block_size).unpadder()
+       decrypted_message = unpadder.update(decrypted_padded_message) + unpadder.finalize()
+       print("Message Decrypted (AES decryption)")
+    except:
+        print("Error decrypting the message. Incorrect Key used (AES)")
+        return "ERROR: Incorrect key used in decrypting message"
+
+    #print("The cipher is: ",decrypted_message)
     return decrypted_message
 
 ######################################################################

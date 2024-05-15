@@ -38,7 +38,7 @@ def generate_fingerprint(public_key):
 def generate_signature(private_key, message, public_key):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         key_id = generate_key_id(public_key)
-
+        print("The message being sent which must be verified on recivers side with the hash is: ", message)
         # hash_message is just the hash method in security.utils -> changed cause "hash" is a reserved word
         digest = hash_message(message).encode("utf8")
 
@@ -58,6 +58,7 @@ def generate_signature(private_key, message, public_key):
             "Signature": signature.hex()
 
         }
+        print("Generated the signature ")
         return signed_data
 
 def verify_signature(public_key, digest, signature):
@@ -142,7 +143,7 @@ def compress_signature_and_message(signature, message):
    
     # Compress the combined data
     compressed_data = zlib.compress(combined_data)
-    
+    print("Compressed signature + method ")
     return compressed_data
 
 def decompress_signature_and_message(compressed_data):
@@ -171,6 +172,7 @@ def decompress_signature_and_message(compressed_data):
     }
 
     # Return the original signature and message
+    print("Decompressed signature and message")
     return decompressed
 
 
@@ -194,22 +196,23 @@ def generate_confidentiality(secret_key, message, public_key):
     # }
     header= len(rsa_encryption).to_bytes(4, byteorder='big')
     data =header+ rsa_encryption+ aes_encryption
-
+    print("Generated Full object to be sent \n")
     return data
 
-def decrypt_message_PGP(message, private_key):
+
+def decrypt_message_PGP_image(message, private_key):
     header = message[:4]
     message_length = int.from_bytes(header, byteorder='big')
-    print(message_length)
+    print("message length: ",message_length)
     encrypted_message = message[4:4+message_length]
-    print("Encrypted Session Key: ", encrypted_message)
+    # print("Encrypted Session Key: ", encrypted_message)
     
     decrypted_session_key = rsa_decrypt(encrypted_message, private_key)
-    print("Decrypted Session Key: ", decrypted_session_key)
+    # print("Decrypted Session Key: ", decrypted_session_key)
     encrypted_file_start=4+ message_length
     encrypted_message = message[encrypted_file_start:]
     decrypted_message= aes_decrypt_message(encrypted_message, decrypted_session_key)
-    print("Decrypted message: ",  decrypted_message)
+    # print("Decrypted message: ",  decrypted_message)
     file= decompress_signature_and_message(decrypted_message)
     print(file)
     signature= file['signature']
@@ -218,7 +221,40 @@ def decrypt_message_PGP(message, private_key):
     json_data= (json.loads(message)) # json of the acrtual message we wanted to send
     caption= json_data['Data']['Caption']
     image= json_data['Data']['Image']
+
     return (image)
+    # print(hex_digest)
+
+
+
+
+
+
+def decrypt_message_PGP(message, private_key):
+    header = message[:4]
+    message_length = int.from_bytes(header, byteorder='big')
+    print("message length:",message_length)
+    encrypted_message = message[4:4+message_length]
+    # print("Encrypted Session Key: ", encrypted_message)
+    
+    decrypted_session_key = rsa_decrypt(encrypted_message, private_key)
+    # print("Decrypted Session Key: ", decrypted_session_key)
+    encrypted_file_start=4+ message_length
+    encrypted_message = message[encrypted_file_start:]
+    decrypted_message= aes_decrypt_message(encrypted_message, decrypted_session_key)
+    # print("Decrypted message: ",  decrypted_message)
+    file= decompress_signature_and_message(decrypted_message)
+
+    signature= file['signature']
+    digest = signature['Digest']
+
+    message = file["message"]
+    print(message)
+    json_data= (json.loads(message)) # json of the acrtual message we wanted to send
+    message_data= json_data['Data']
+   
+    print("Decrypted Data and retrieved the message that was sent \n")
+    return (json.dumps(message_data))
     # print(hex_digest)
     
 
@@ -227,9 +263,8 @@ def decrypt_message_PGP(message, private_key):
 def create_string(message):
     data_b64 =  message
 
-
     metadata = {
-        "Caption": "words",
+        "Caption": "TEXT MESSAGE",
         "Image": data_b64
     }
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -240,27 +275,25 @@ def create_string(message):
     }
     return message
 
+# def create_string(message):   
+#     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#     message = {
+#          "Filename": "MESSAGE",
+#          "Timestamp": timestamp,
+#         "Data": message
+#     }
+#     return message
+
 
 def create_image_message(message, caption):
-    # print("Select an image")
-    # root = tk.Tk()
-    # root.withdraw()
-
-    # image = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
-
-    # caption = input("Enter a Caption:\n")
-
-    # fileName = os.path.basename(fileName)
+    
+    fileName = os.path.basename(fileName)
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    # with open(image, "rb") as image:
-    #     data = image.read()
-
-    # Base64 encode the image data
-    data_b64 = base64.b64encode(message).decode('utf-8')
+    data_b64 = message # message was already base64 encoded
 
     metadata = {
-        "Caption": caption,
+        "Caption": "PLEASE SUPPLY A CAPTION",
         "Image": data_b64
     }
 
