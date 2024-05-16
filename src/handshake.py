@@ -1,7 +1,6 @@
 import socket
 import rsa
-from Crypto.Cipher import AES
-from Crypto import Random
+
 import base64
 import os
 
@@ -49,21 +48,21 @@ def generate_shared_secret():
     secret = os.urandom(16)
     return secret
 
-def encrypt_message(message, key):
-    iv = Random.new().read(AES.block_size)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    padding = AES.block_size - len(message) % AES.block_size
-    message += bytes([padding]) * padding
-    encrypted_message = iv + cipher.encrypt(message)
-    return base64.b64encode(encrypted_message).decode('utf-8')
+# def encrypt_message(message, key):
+#     iv = Random.new().read(AES.block_size)
+#     cipher = AES.new(key, AES.MODE_CBC, iv)
+#     padding = AES.block_size - len(message) % AES.block_size
+#     message += bytes([padding]) * padding
+#     encrypted_message = iv + cipher.encrypt(message)
+#     return base64.b64encode(encrypted_message).decode('utf-8')
 
-def decrypt_message(encrypted_message, key):
-    encrypted_message = base64.b64decode(encrypted_message)
-    iv = encrypted_message[:AES.block_size]
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_message = cipher.decrypt(encrypted_message[AES.block_size:])
-    padding = decrypted_message[-1]
-    return decrypted_message[:-padding].decode('utf-8')
+# def decrypt_message(encrypted_message, key):
+#     encrypted_message = base64.b64decode(encrypted_message)
+#     iv = encrypted_message[:AES.block_size]
+#     cipher = AES.new(key, AES.MODE_CBC, iv)
+#     decrypted_message = cipher.decrypt(encrypted_message[AES.block_size:])
+#     padding = decrypted_message[-1]
+#     return decrypted_message[:-padding].decode('utf-8')
 
 def alice():
     ensure_keys_and_certificates("alice")
@@ -94,12 +93,12 @@ def alice():
 
             while True:
                 message = input("Enter message to send: ")
-                encrypted_message = encrypt_message(message.encode('utf-8'), shared_secret)
-                conn.send(encrypted_message.encode('utf-8'))
+                # encrypted_message = encrypt_message(message.encode('utf-8'), shared_secret)
+                # conn.send(encrypted_message.encode('utf-8'))
 
                 encrypted_response = conn.recv(1024)
-                response = decrypt_message(encrypted_response.decode('utf-8'), shared_secret)
-                print("Bob:", response)
+                # response = decrypt_message(encrypted_response.decode('utf-8'), shared_secret)
+                # print("Bob:", response)
 
 def bob():
     ensure_keys_and_certificates("bob")
@@ -124,12 +123,12 @@ def bob():
 
         while True:
             encrypted_message = s.recv(1024)
-            message = decrypt_message(encrypted_message.decode('utf-8'), shared_secret)
-            print("Alice:", message)
+            # message = decrypt_message(encrypted_message.decode('utf-8'), shared_secret)
+            # print("Alice:", message)
 
-            response = input("Enter message to send: ")
-            encrypted_response = encrypt_message(response.encode('utf-8'), shared_secret)
-            s.send(encrypted_response.encode('utf-8'))
+            # response = input("Enter message to send: ")
+            # encrypted_response = encrypt_message(response.encode('utf-8'), shared_secret)
+            # s.send(encrypted_response.encode('utf-8'))
 
 if __name__ == "__main__":
     import sys

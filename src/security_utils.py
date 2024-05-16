@@ -11,7 +11,6 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
-from Crypto.PublicKey import RSA
 
 
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
@@ -262,11 +261,14 @@ def ensure_keys():
         os.makedirs(key_dir)
     
     if not os.path.exists(private_key_path):
-        private_key = RSA.generate(2048)
-        with open(private_key_path, "wb") as priv_file:
-            priv_file.write(private_key.export_key('PEM'))
+        private_key = gen_private_key()
         
-        public_key = private_key.publickey()
+        save_key(private_key, "private_key,pem", "private")
+        # with open(private_key_path, "wb") as priv_file:
+        #     priv_file.write(private_key.export_key('PEM'))
+        
+        public_key = gen_public_key(private_key)
+        save_key(public_key,"public_key.pem", "public")
         with open(public_key_path, "wb") as pub_file:
             pub_file.write(public_key.export_key('PEM'))
         print("Keys generated and saved.")
