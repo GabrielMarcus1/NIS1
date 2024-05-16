@@ -1,1 +1,14 @@
 Networks Assignment 1 README
+
+TODO:
+1. run pip install -r requirements ( Run it in venv if you dont want any of the packages globally installed)
+
+
+Running the Program:
+1. start the Server first
+2. Run the Client/s after (You can get the Ip address you need in the terminal where you started the server)
+
+What Our Program Can do:
+1. Send messages to members in the network.
+2. Send images with Captions.
+Everything is encrypted using the PGP paridigm 
