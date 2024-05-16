@@ -253,7 +253,11 @@ def load_key(key_path, key_type):
         
 #added so exchange works 
 def ensure_keys():
-    key_dir = "keys"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
+
+# Define the key directory and file paths
+    key_dir = "keys/"
     private_key_path = os.path.join(key_dir, "private_key.pem")
     public_key_path = os.path.join(key_dir, "public_key.pem")
     
@@ -262,15 +266,18 @@ def ensure_keys():
     
     if not os.path.exists(private_key_path):
         private_key = gen_private_key()
-        
-        save_key(private_key, "private_key,pem", "private")
-        # with open(private_key_path, "wb") as priv_file:
-        #     priv_file.write(private_key.export_key('PEM'))
-        
+        save_key(private_key, "private_key.pem", "private")
         public_key = gen_public_key(private_key)
         save_key(public_key,"public_key.pem", "public")
-        with open(public_key_path, "wb") as pub_file:
-            pub_file.write(public_key.export_key('PEM'))
+        # with open(private_key_path, "wb") as priv_file:
+        #     priv_file.write(private_key.export_key('PEM'))
+    if not os.path.exists(private_key_path):
+        private_key = gen_private_key()
+        save_key(private_key, "private_key.pem", "private")
+        public_key = gen_public_key(private_key)
+        save_key(public_key,"public_key.pem", "public")
+        # with open(public_key_path, "wb") as pub_file:
+        #     pub_file.write(public_key.export_key('PEM'))
         print("Keys generated and saved.")
     else:
         print("Keys already exist.")
