@@ -1,4 +1,5 @@
-
+import os
+from Crypto.PublicKey import RSA
 
 # Function to add a public key to the key ring
 def add_key(key_ring, identifier, public_key):
@@ -24,6 +25,16 @@ def list_keys(key_ring):
 key_ring = {}
 
 
+def load_key(key_path, key_type):
+    full_path = os.path.join("keys", key_path)
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"{key_type.capitalize()} key not found at {full_path}.")
+    
+    with open(full_path, "rb") as key_file:
+        key = RSA.import_key(key_file.read())
+
+    return key
+
 if __name__ == "__main__":
     # dummy data 
     public_key1 = "public_key_data_1"
@@ -42,3 +53,5 @@ if __name__ == "__main__":
     # Removing a key from the key ring
     remove_key(key_ring, 'user1')
     print("Key ring after removing user1:", list_keys(key_ring))
+    
+    

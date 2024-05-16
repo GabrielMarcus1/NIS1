@@ -5,8 +5,8 @@ import threading
 import tkinter as tk
 from tkinter import scrolledtext, Button, filedialog, simpledialog
 from generate_message import constuct_pgp_message
-from message_utils import decrypt_message_PGP
-from security_utils import load_key
+from message_utils import create_string, decrypt_message_PGP
+from security_utils import gen_private_key, gen_public_key, load_key, ensure_keys
 
 CHUNK_SIZE = 2048
 
@@ -16,6 +16,7 @@ class GUIClient:
         self.master = master
         self.host = host
         self.port = port
+        ensure_keys() # ensure keys are generated before loading 
         self.client_private_key = load_key("private_key.pem", "private")
         self.client_public_key = load_key("public_key.pem", "public")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
