@@ -1,36 +1,54 @@
 import socket
 import rsa
 from Crypto.Cipher import AES
-from Crypto.Hash import SHA256
 from Crypto import Random
 import base64
 import os
 
-# Generate RSA key pairs for Alice and Bob
-def generate_rsa_keys():
-    (public_key, private_key) = rsa.newkeys(2048)
-    return public_key, private_key
+# Ensure keys and certificates exist
+def ensure_keys_and_certificates(name):
+    key_dir = "keys"
+    cert_dir = "certs"
+    os.makedirs(key_dir, exist_ok=True)
+    os.makedirs(cert_dir, exist_ok=True)
+    
+    private_key_path = os.path.join(key_dir, f"{name}_private_key.pem")
+    public_key_path = os.path.join(key_dir, f"{name}_public_key.pem")
+    cert_path = os.path.join(cert_dir, f"{name}_cert.pem")
 
-# Load the CA's public key (assumed to be pre-distributed)
-def load_ca_public_key():
-    with open("ca_public_key.pem", "rb") as f:
-        ca_public_key = rsa.PublicKey.load_pkcs1(f.read())
-    return ca_public_key
+    if not os.path.exists(private_key_path):
+        (public_key, private_key) = rsa.newkeys(2048)
+        with open(private_key_path, "wb") as priv_file:
+            priv_file.write(private_key.save_pkcs1())
+        with open(public_key_path, "wb") as pub_file:
+            pub_file.write(public_key.save_pkcs1())
+        with open(cert_path, "wb") as cert_file:
+            cert_file.write(public_key.save_pkcs1())  
+        print(f"Keys and certificate for {name} generated and saved.")
+    else:
+        print(f"Keys and certificate for {name} already exist.")
 
-# Verify the received certificate
-def verify_certificate(certificate, ca_public_key):
+def load_key(key_path):
+    with open(key_path, "rb") as key_file:
+        key = rsa.PublicKey.load_pkcs1(key_file.read()) if 'public' in key_path else rsa.PrivateKey.load_pkcs1(key_file.read())
+    return key
+
+def load_certificate(cert_path):
+    with open(cert_path, "rb") as cert_file:
+        cert = cert_file.read()
+    return cert
+
+def verify_certificate(cert, ca_public_key):
     try:
-        rsa.verify(certificate, ca_public_key)
+        rsa.verify(cert, ca_public_key)  # Simulated verification for demonstration
         return True
     except:
         return False
 
-# Generate a shared secret key using Diffie-Hellman
 def generate_shared_secret():
-    secret = os.urandom(16)  # Replace with actual Diffie-Hellman key exchange
+    secret = os.urandom(16)
     return secret
 
-# Encrypt a message using AES
 def encrypt_message(message, key):
     iv = Random.new().read(AES.block_size)
     cipher = AES.new(key, AES.MODE_CBC, iv)
@@ -39,7 +57,6 @@ def encrypt_message(message, key):
     encrypted_message = iv + cipher.encrypt(message)
     return base64.b64encode(encrypted_message).decode('utf-8')
 
-# Decrypt a message using AES
 def decrypt_message(encrypted_message, key):
     encrypted_message = base64.b64decode(encrypted_message)
     iv = encrypted_message[:AES.block_size]
@@ -48,13 +65,13 @@ def decrypt_message(encrypted_message, key):
     padding = decrypted_message[-1]
     return decrypted_message[:-padding].decode('utf-8')
 
-# Alice and Bob's communication setup
 def alice():
-    # Generate RSA key pairs and load CA public key
-    alice_public_key, alice_private_key = generate_rsa_keys()
-    ca_public_key = load_ca_public_key()
+    ensure_keys_and_certificates("alice")
+    alice_private_key = load_key("keys/alice_private_key.pem")
+    alice_public_key = load_key("keys/alice_public_key.pem")
+    ca_public_key = load_key("ca_public_key.pem")  # Assuming the CA public key is pre-distributed
+    alice_cert = load_certificate("certs/alice_cert.pem")
 
-    # Create a TCP socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(('localhost', 65432))
         s.listen()
@@ -63,8 +80,7 @@ def alice():
         with conn:
             print('Connected by', addr)
 
-            # Exchange certificates and verify
-            conn.send(alice_public_key.save_pkcs1())
+            conn.send(alice_cert)
             bob_cert = conn.recv(1024)
             if verify_certificate(bob_cert, ca_public_key):
                 print("Bob's certificate verified.")
@@ -72,12 +88,10 @@ def alice():
                 print("Certificate verification failed.")
                 return
 
-            # Generate and share secret key
             shared_secret = generate_shared_secret()
-            encrypted_secret = rsa.encrypt(shared_secret, bob_cert)
+            encrypted_secret = rsa.encrypt(shared_secret, rsa.PublicKey.load_pkcs1(bob_cert))
             conn.send(encrypted_secret)
 
-            # Communication loop
             while True:
                 message = input("Enter message to send: ")
                 encrypted_message = encrypt_message(message.encode('utf-8'), shared_secret)
@@ -88,28 +102,26 @@ def alice():
                 print("Bob:", response)
 
 def bob():
-    # Generate RSA key pairs and load CA public key
-    bob_public_key, bob_private_key = generate_rsa_keys()
-    ca_public_key = load_ca_public_key()
+    ensure_keys_and_certificates("bob")
+    bob_private_key = load_key("keys/bob_private_key.pem")
+    bob_public_key = load_key("keys/bob_public_key.pem")
+    ca_public_key = load_key("ca_public_key.pem")
+    bob_cert = load_certificate("certs/bob_cert.pem")
 
-    # Create a TCP socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect(('localhost', 65432))
 
-        # Exchange certificates and verify
         alice_cert = s.recv(1024)
         if verify_certificate(alice_cert, ca_public_key):
             print("Alice's certificate verified.")
-            s.send(bob_public_key.save_pkcs1())
+            s.send(bob_cert)
         else:
             print("Certificate verification failed.")
             return
 
-        # Receive and decrypt shared secret key
         encrypted_secret = s.recv(1024)
         shared_secret = rsa.decrypt(encrypted_secret, bob_private_key)
 
-        # Communication loop
         while True:
             encrypted_message = s.recv(1024)
             message = decrypt_message(encrypted_message.decode('utf-8'), shared_secret)
@@ -119,12 +131,13 @@ def bob():
             encrypted_response = encrypt_message(response.encode('utf-8'), shared_secret)
             s.send(encrypted_response.encode('utf-8'))
 
-# Run Alice or Bob
 if __name__ == "__main__":
     import sys
+    if len(sys.argv) != 2 or sys.argv[1] not in ['alice', 'bob']:
+        print("Usage in terminal: python handshake.py [alice|bob]")
+        sys.exit(1)
+
     if sys.argv[1] == 'alice':
         alice()
     elif sys.argv[1] == 'bob':
         bob()
-    else:
-        print("Usage: python handshake.py [alice|bob]")

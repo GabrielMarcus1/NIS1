@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import os
-
+from Crypto.PublicKey import RSA
 
 
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
@@ -282,3 +282,26 @@ def load_key(key_path, key_type):
             return serialization.load_pem_private_key(key_data, password=None, backend=default_backend())
         elif key_type == "public":
             return serialization.load_pem_public_key(key_data, backend=default_backend())
+        
+#added so exchange works 
+def ensure_keys():
+    key_dir = "keys"
+    private_key_path = os.path.join(key_dir, "private_key.pem")
+    public_key_path = os.path.join(key_dir, "public_key.pem")
+    
+    if not os.path.exists(key_dir):
+        os.makedirs(key_dir)
+    
+    if not os.path.exists(private_key_path):
+        private_key = RSA.generate(2048)
+        with open(private_key_path, "wb") as priv_file:
+            priv_file.write(private_key.export_key('PEM'))
+        
+        public_key = private_key.publickey()
+        with open(public_key_path, "wb") as pub_file:
+            pub_file.write(public_key.export_key('PEM'))
+        print("Keys generated and saved.")
+    else:
+        print("Keys already exist.")
+
+ensure_keys()
