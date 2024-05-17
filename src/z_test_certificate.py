@@ -14,7 +14,7 @@ class TestCertificateFunctions(unittest.TestCase):
 
     def tearDown(self):
         # Clean up generated files after each test
-        files_to_remove = ["ca_private_key.pem", "ca_public_key.pem", "ca_certificate.pem"]
+        files_to_remove = ["ca_public_key.pem", "ca_certificate.pem"]
         for file_name in files_to_remove:
             try:
                 os.remove("keys/" + file_name)

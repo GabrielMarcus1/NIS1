@@ -4,17 +4,15 @@ import hashlib
 import json
 import zlib
 from datetime import datetime
-import tkinter as tk
-from tkinter import filedialog
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization ,hashes
 from security_utils import (
     aes_decrypt_message,
     aes_encrypt_message,
+    generate_secret_key,
     hash_message,
     rsa_decrypt,
-    rsa_encrypt,
-    verify_hash,
+    rsa_encrypt,   
 )
 
 def generate_key_id(public_key):
@@ -22,7 +20,6 @@ def generate_key_id(public_key):
     # Extract the Key ID (last 8 bytes of the fingerprint)
     key_id = fingerprint[-8:].hex()  # Take the last 8 bytes and convert to hexadecimal
     return key_id
-
 
 # generate key fingerprint of publickey used in Key ID
 def generate_fingerprint(public_key):
@@ -44,12 +41,8 @@ def generate_signature(private_key, message, public_key):
     
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     key_id = generate_key_id(public_key)
-    print(
-        "The message being sent which must be verified on recivers side with the hash is: ",
-        message,
-    )
     # hash_message is just the hash method in security.utils -> changed cause "hash" is a reserved word
-    digest = hash_message(message).encode("utf8")
+    digest = hash_message(message).encode("utf-8")
 
     # Message Digest Signed
     signature = private_key.sign(digest, padding.PKCS1v15(), hashes.SHA256())
@@ -57,27 +50,21 @@ def generate_signature(private_key, message, public_key):
     signed_data = {
         "Timestamp": timestamp,
         "Key_ID": key_id,
-        "Digest": digest.hex(),
         "Signature": signature.hex(),
     }
     print("Generated the signature ")
     return signed_data
 
-
-def verify_signature(public_key, digest, signature):
+def verify_signature(public_key, message, signature):
     # converts from Hex to bytes
-    signature = bytes.fromhex(signature)
-
-    # converts the digest to bytes
-    digest = bytes.fromhex(digest)
+    message = hash_message(message)
 
     try:
-        public_key.verify(signature, digest, padding.PKCS1v15(), hashes.SHA256())
+        public_key.verify(signature, message, padding.PKCS1v15(), hashes.SHA256())
+        print("The signature is verified")
         return True  # Signature is valid
     except Exception as e:
-        print(f"Signature verification failed: {e}")
         return False  # Signature is invalid
-
 
 def compress_signature_and_message(signature, message):
     """
@@ -87,7 +74,9 @@ def compress_signature_and_message(signature, message):
     # Serialize dictionaries to JSON strings and encode as bytes
     signature_bytes = json.dumps(signature)
     message_bytes = json.dumps(message)
-
+    # data={"signature":signature_bytes, "message_bytes":message_bytes}
+    # data=json.dumps(data)
+    # data=data.encode("utf-8")
     # Concatenate signature and message bytes with a separator
     combined_data = (signature_bytes + "|" + message_bytes).encode("utf-8")
 
@@ -95,7 +84,6 @@ def compress_signature_and_message(signature, message):
     compressed_data = zlib.compress(combined_data)
     print("Compressed signature + method ")
     return compressed_data
-
 
 def decompress_signature_and_message(compressed_data):
     """
@@ -123,10 +111,8 @@ def decompress_signature_and_message(compressed_data):
     print("Decompressed signature and message")
     return decompressed
 
-
 def create_header(message_length):
     return message_length.to_bytes(4, byteorder="big")
-
 
 # generates message with encrpted secret key and encrypted message
 def generate_confidentiality(secret_key, message, public_key):
@@ -146,11 +132,9 @@ def generate_confidentiality(secret_key, message, public_key):
     print("Generated Full object to be sent \n")
     return data
 
-
-def decrypt_message_PGP(message, private_key):
+def decrypt_message_PGP(message, private_key, friends_public_key):
     header = message[:4]
     message_length = int.from_bytes(header, byteorder="big")
-    print("message length:", message_length)
     encrypted_message = message[4 : 4 + message_length]
     # print("Encrypted Session Key: ", encrypted_message)
 
@@ -163,18 +147,18 @@ def decrypt_message_PGP(message, private_key):
     file = decompress_signature_and_message(decrypted_message)
 
     signature = file["signature"]
-    digest = signature["Digest"]
-
+    signed_digest = signature["Signature"]
     message = file["message"]
-    print(message)
-    verify_hash(message, digest)
+    
+    
+    verify_signature(friends_public_key, message, signed_digest)
+   
     json_data = json.loads(message)  # json of the acrtual message we wanted to send
     message_data = json_data["Data"]
 
     print("Decrypted Data and retrieved the message that was sent \n")
     return json.dumps(message_data)
     # print(hex_digest)
-
 
 def create_string(message):
     data_b64 = message
@@ -184,3 +168,18 @@ def create_string(message):
     message = {"Filename": "MESSAGE", "Timestamp": timestamp, "Data": metadata}
     return message
 
+def constuct_pgp_message(message, private_key, public_key):
+    # public_key = serialization.load_pem_public_key(public_key)
+    message = create_string(message)
+    # print("The message is: ",message)
+    messsages = json.dumps(message)
+    # print("the next message is: ", messsages)
+    secret = generate_secret_key()
+    # adds signature to message
+    signed = generate_signature(private_key, messsages, public_key)
+    # print("The signed message is: ",signed)
+    compressed_file = compress_signature_and_message(signed, messsages)
+    # print("The compressed file is: ",compressed_file)
+    confidential_file = generate_confidentiality(secret, compressed_file, public_key)
+    # print("The confidential file is: ",confidential_file)
+    return confidential_file

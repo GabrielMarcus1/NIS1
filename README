@@ -6,9 +6,9 @@ TODO:
 
 Running the Program:
 1. start the Server first
-2. Run the Client/s after (You can get the Ip address you need in the terminal where you started the server)
+2. Run the Client/s after (You can get the Ip address you need in the servers terminal where you start the server)
 
-What Our Program Can do:
+What Our Program can do:
 1. Send messages to members in the network.
 2. Send images with Captions.
 Everything is encrypted using the PGP paridigm 

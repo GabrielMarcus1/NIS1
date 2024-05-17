@@ -11,7 +11,6 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
-# note the keys generated are once off and are stored in the respsective users keys files but for testing we can just use this
 def gen_private_key():
     """
     :return:
@@ -22,7 +21,6 @@ def gen_private_key():
     )
     return private_key
 
-
 def gen_public_key(private_key):
     """
     :param private_key:
@@ -31,7 +29,6 @@ def gen_public_key(private_key):
     public_key = private_key.public_key()
     return public_key
 
-# encrypte message using other users public key
 def rsa_encrypt(message, public_key):
     """
     :param message:
@@ -45,7 +42,6 @@ def rsa_encrypt(message, public_key):
     print("Secret key encrypted")
     return cipher
 
-
 def rsa_decrypt(cipher, private_key):
     """
     This function takes encrypted data and your private key as input and returns the
@@ -57,9 +53,11 @@ def rsa_decrypt(cipher, private_key):
             cipher,
             padding.PKCS1v15(),
         )
+        print("obtained the secret key(RSA)")
     except:
         print("Error decrypting the Secret key. Incorrect Key used.(RSA)")
         plaintext = "Error incorrect key used in decrypting message"
+    
     return plaintext
 ###################################################################
 
@@ -93,7 +91,7 @@ def aes_encrypt_message(message, secret_key):
 
     # Encrypt the padded message
     ciphertext = encryptor.update(padded_message) + encryptor.finalize()
-    print("Encrypted message using the secret key")
+    print("Encrypted message using the secret key(AES)")
     # Return the IV and ciphertext
     return iv + ciphertext
 
@@ -113,10 +111,11 @@ def aes_decrypt_message(encrypted_message, secret_key):
 
     try:
         # Create an AES cipher with CBC mode using the secret key and IV
+        
         cipher = Cipher(
             algorithms.AES(secret_key), modes.CBC(iv), backend=default_backend()
         )
-
+       
         # Decrypt the ciphertext
         decryptor = cipher.decryptor()
         decrypted_padded_message = decryptor.update(ciphertext) + decryptor.finalize()
@@ -131,11 +130,9 @@ def aes_decrypt_message(encrypted_message, secret_key):
     except:
         print("Error decrypting the message. Incorrect Key used (AES).")
         return "ERROR: Incorrect key used in decrypting message"
-
 ######################################################################
 
 ############KEY MANAGEMENT#######################
-# Save Key to file. Key is in PEM format
 def save_key(key, filename, key_type):
     """
     Save key to file
@@ -183,7 +180,6 @@ def hash_message(message):
     # ^^^^This is smaller than hexdigest, its half the size and should be used once we are done debugging
     return hex_digest
 
-
 def verify_hash(message, hex_digest):
     """
     This function takes a message and a hexadecimal digest as input and returns True if the hexadecimal digest is the SHA-256 hash of the message, and False otherwise.
@@ -202,7 +198,6 @@ def verify_hash(message, hex_digest):
     else:
         print("Message tampereed with. Digests do not match")
 
-
 def generate_hash_message(message):
     message_json = json.dumps(message)
     hex_digest = hash(message_json)
@@ -212,7 +207,6 @@ def generate_hash_message(message):
     }
 
     return message
-
 
 def load_key(key_path, key_type):
     try:
@@ -228,7 +222,6 @@ def load_key(key_path, key_type):
         print(f"Error loading key: {e}")
         return None
         
-#added so exchange works 
 def ensure_keys():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
