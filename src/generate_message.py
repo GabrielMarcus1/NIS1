@@ -3,7 +3,7 @@ import base64
 import json
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from security_utils import gen_public_key, gen_private_key, generate_secret_key
+from security_utils import generate_secret_key
 from message_utils import (
     compress_signature_and_message,
     create_string,
@@ -25,24 +25,13 @@ from message_utils import (
 # 9. Testing and debugging (ONGOING) (UNIT TESTS)
 # 10. Refactor
 # 11. Coments ()
-# 12. Handshake to establish connections (CHIVES)
+# 12. Handshake to establish connections (DONE) ✔️
 # 13. Network setup (DONE) ✔️
 # 14: GUI (DONE) ✔️
 # 15. Add more security features
 # 16. Make images send over network and save them (DONE) ✔️
 
 
-
-#########################TESTING ##########################################
-# create a users public private key set
-# private_key = gen_private_key()
-# public_key = gen_public_key(private_key)
-
-# private_key_bytes = private_key.private_bytes(
-#     encoding=serialization.Encoding.PEM,
-#     format=serialization.PrivateFormat.TraditionalOpenSSL,
-#     encryption_algorithm=serialization.NoEncryption(),
-# )
 
 ########################################################################################
 
@@ -62,28 +51,8 @@ def constuct_pgp_message(message, private_key, public_key):
     # print("The confidential file is: ",confidential_file)
     return confidential_file
 
-def constuct_pgp_image_message(message, private_key, public_key):
-    message = create_string(message)
-    # print("The message is: ",message)
-    messsages = json.dumps(message)
-    # print("the next message is: ", messsages)
-    secret = generate_secret_key()
-    # adds signature to message
-    signed = generate_signature(private_key, messsages, public_key)
-    # print("The signed message is: ",signed)
-    compressed_file = compress_signature_and_message(signed, messsages)
-    # print("The compressed file is: ",compressed_file)
-    confidential_file = generate_confidentiality(secret, compressed_file, public_key)
-    # print("The confidential file is: ",confidential_file)
-    return confidential_file
-#
-# fille= constuct_pgp_image("Hello World",private_key)
 
-# print(confidential_file)
-# print(secret)
-# decrypt_message_PGP(fille, private_key)
 
-####################################################################################
 
 
 # ##########Testing 1########################
