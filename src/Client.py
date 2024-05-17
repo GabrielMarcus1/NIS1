@@ -69,6 +69,7 @@ class GUIClient:
         encrypted_message = constuct_pgp_message(
             encoded_data, self.client_private_key, self.client_public_key
         )
+
         header = json.dumps({"type": "image", "length": len(encrypted_message)})
         self.socket.sendall(header.encode("utf-8"))
         self.socket.sendall(encrypted_message)
@@ -133,10 +134,6 @@ class GUIClient:
         self.text_area.insert(tk.END, caption + "\n")
         self.save_image_message(image_data)
 
-        # image_data = base64.b64decode(recievedData)
-        # print("Image successfully recieved")
-        # self.save_image_message(image_data)
-
     
     def click_cert(self):
         self.send_cert("keys/my_certificate.pem")
@@ -157,9 +154,7 @@ class GUIClient:
         self.save_certificate(received_chunks)
        
 
-    def close_connection(self):
-        self.socket.close()
-        self.master.quit()
+    
 
     def save_image_message(self, data):
         file_path = filedialog.asksaveasfilename(
@@ -180,6 +175,7 @@ class GUIClient:
             self.socket.sendall(header.encode("utf-8"))
             self.socket.sendall(certificate)
             self.certificate_sent=True
+            print("Certificate sent")
             self.send_certificate_button.config(state=tk.DISABLED)
         except Exception as e:
             print(f"Error sending certificate: {e}")
@@ -188,8 +184,6 @@ class GUIClient:
         print("before saving key")
         save_certificate(certificate,"friends_certificate.pem")
         print("after save")
-        # with open("friends_public_key.pem", "wb") as file:
-        #     file.write(certificate)
         
         self.friends_public_key=verify_certificate("keys/friends_certificate.pem", "keys/ca_certificate.pem")
         
@@ -206,26 +200,34 @@ class GUIClient:
         print("have key")
         # self.friends_public_key = load_key("friends_public_key.pem", "public")
         print(" friends public key is:",  self.friends_public_key)
-def main():
-    # Create "photos" folder if it doesn't exist
-    # os.makedirs("photos", exist_ok=True)
 
-    # root = tk.Tk()
-    # client = GUIClient(root, "localhost", 8060)
-    # root.mainloop()
+    def close_connection(self):
+        self.socket.close()
+        self.master.quit()
+        
+def main():
+    # client = GUIClient(root, "192.168.251.58", 8090)
+    
     root = tk.Tk()
     root.withdraw()  # Hide the root window
-    server_ip = simpledialog.askstring("Server IP", "Enter the server IP address:")
-    socket = simpledialog.askinteger(
-        "Socket", "Enter the socket you wish to connect to:"
-    )
+    client = GUIClient(root, "196.42.106.155", 8090)
+
+    # server_ip = simpledialog.askstring("Server IP", "Enter the server IP address:")
+    # socket = simpledialog.askinteger(
+    #     "Socket", "Enter the socket you wish to connect to:"
+    # )
+
     root.deiconify()  # Show the root window
-    if server_ip:
-        client = GUIClient(root, server_ip, socket)
-        root.mainloop()
-    else:
-        print("No IP address entered, exiting.")
-        root.destroy()
+    root.mainloop() #remove when change back to input
+
+
+    # if server_ip:
+    #     # client = GUIClient(root, server_ip, socket)
+    #     client = GUIClient(root, server_ip, socket)
+    #     root.mainloop()
+    # else:
+    #     print("No IP address entered, exiting.")
+    #     root.destroy()
 
 
 if __name__ == "__main__":

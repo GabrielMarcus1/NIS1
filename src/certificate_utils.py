@@ -9,30 +9,26 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from security_utils import gen_private_key, gen_public_key, save_key
 
 
 def load_ca_public_key(ca_cert_path):
     try:
         with open(ca_cert_path, "rb") as file:
-            # ca_public_key_data = file.read()
-            # print("Opened file CAs")
-            # return serialization.load_pem_public_key(ca_public_key_data, backend=default_backend())
             ca_cert_data = file.read()
             ca_cert = x509.load_pem_x509_certificate(ca_cert_data, default_backend())
             ca_public_key = ca_cert.public_key()
             print("Got Cas public key")
             return ca_public_key
-    except:
-        print("could not open file")
-        return "ERROR"
+    except Exception as e:
+        print("Failed to load CA public key:",str(e))
+        return None
 
 
 def verify_certificate(cert_path, ca_cert_path):
-    print(" In attempt to verify certificate")
+   
     ca_public_key = load_ca_public_key(ca_cert_path)
     cert = load_certificate(cert_path)
-    print("Gotten ca's public key")
+   
     try:
         ca_public_key.verify(
             cert.signature,
@@ -82,17 +78,19 @@ def create_certificate(public_key):
             ca_private_key_data, password=None
         )
     cert = cert.sign(ca_private_key, hashes.SHA256())
-    save_certificate_1(cert, "my_certificate.pem")
+    # save_certificate_1(cert, "my_certificate.pem")
 
     return cert
 
 
 def save_certificate(certificate_bytes, file_name):
-    #  with open("keys/"+file_name, "wb") as f:
-    #     f.write(certificate.public_bytes(serialization.Encoding.PEM))
-    certificate = load_pem_x509_certificate(certificate_bytes, default_backend())
-    with open("keys/" + file_name, "wb") as f:
-        f.write(certificate.public_bytes(serialization.Encoding.PEM))
+    try:
+      certificate = load_pem_x509_certificate(certificate_bytes, default_backend())
+      with open("keys/" + file_name, "wb") as f:
+         f.write(certificate.public_bytes(serialization.Encoding.PEM))
+    except Exception as e:
+        print("Certificate failed to save:", str(e))
+        return ("Error", False)
 
 
 def save_certificate_1(certificate_bytes, file_name):
@@ -187,14 +185,3 @@ def extract_public_key_from_certificate(cert_path):
     with open(cert_path, "rb") as f:
         cert = x509.load_pem_x509_certificate(f.read(), default_backend())
         return cert.public_key()
-
-
-# create_ca_certificate()
-# private_key= gen_private_key()
-# public_key= gen_public_key(private_key)
-# save_key(private_key, "my_private_key.pem","private")
-# save_key(public_key, "my_public_key.pem","public")
-# create_certificate(public_key)
-# # load_certificate("my_certificate.pem")
-# verify_certificate("keys/my_certificate.pem","keys/ca_certificate.pem")
-verify_certificate("keys/friends_certificate.pem", "keys/ca_certificate.pem")

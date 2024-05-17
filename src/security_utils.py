@@ -1,17 +1,14 @@
+import os
 import json
 import secrets
-import cryptography
-from cryptography.hazmat.primitives.asymmetric import rsa  # type: ignore
-from cryptography.hazmat.primitives.asymmetric import padding  # type: ignore
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 import hashlib
-from cryptography.hazmat.primitives.padding import PKCS7
+import cryptography
 from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes,serialization
+from cryptography.hazmat.primitives.asymmetric import rsa ,padding 
+from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-import os
-
 
 ############# KEY GENERATION,ENCRYPTION AND DECRYPTION (PRIVATE & PUBLIC KEYS)####################
 # note the keys generated are once off and are stored in the respsective users keys files but for testing we can just use this
@@ -34,7 +31,6 @@ def gen_public_key(private_key):
     public_key = private_key.public_key()
     return public_key
 
-
 # encrypte message using other users public key
 def rsa_encrypt(message, public_key):
     """
@@ -42,7 +38,6 @@ def rsa_encrypt(message, public_key):
     :param public_key:
     :return: Cipher text
     """
-    # message = message.encode("utf-8")
     cipher = public_key.encrypt(
         message,
         padding.PKCS1v15(),
@@ -58,26 +53,21 @@ def rsa_decrypt(cipher, private_key):
     Returns: plaintext
     """
     try:
-
         plaintext = private_key.decrypt(
             cipher,
             padding.PKCS1v15(),
         )
     except:
-        print("Error decrypting the message")
-        plaintext = "error incorrect key used in decrypting message"
+        print("Error decrypting the Secret key. Incorrect Key used.(RSA)")
+        plaintext = "Error incorrect key used in decrypting message"
     return plaintext
-
-
 ###################################################################
-
 
 #################SECRET KEY Generation, Decryption Encryption#########################################
 def generate_secret_key():
     # Generate a random 32-byte (256-bit) key
     print("Generating the secret key")
     return os.urandom(32)
-
 
 def aes_encrypt_message(message, secret_key):
     """
@@ -106,7 +96,6 @@ def aes_encrypt_message(message, secret_key):
     print("Encrypted message using the secret key")
     # Return the IV and ciphertext
     return iv + ciphertext
-
 
 def aes_decrypt_message(encrypted_message, secret_key):
     """
@@ -138,19 +127,12 @@ def aes_decrypt_message(encrypted_message, secret_key):
             unpadder.update(decrypted_padded_message) + unpadder.finalize()
         )
         print("Message Decrypted (AES decryption)")
+        return decrypted_message
     except:
-        print("Error decrypting the message. Incorrect Key used (AES)")
+        print("Error decrypting the message. Incorrect Key used (AES).")
         return "ERROR: Incorrect key used in decrypting message"
 
-    # print("The cipher is: ",decrypted_message)
-    return decrypted_message
-
-
 ######################################################################
-
-
-######################################################################
-
 
 ############KEY MANAGEMENT#######################
 # Save Key to file. Key is in PEM format
@@ -175,15 +157,10 @@ def save_key(key, filename, key_type):
                 )
             )
         else:
-            raise ValueError("Invalid key type. Must be 'private' or 'public'.")
-
-
-#################################################
+            raise print("Invalid key type. Must be 'private' or 'public'.")
 
 
 ############HASHING########################
-
-
 def hash_message(message):
     """
     This function takes a message as input and returns the hexadecimal digest of the SHA-256 hash of the message.
@@ -226,10 +203,6 @@ def verify_hash(message, hex_digest):
         print("Message tampereed with. Digests do not match")
 
 
-# Compare the hash of the message with the given hexadecimal digest
-
-
-# creates message with hex digest
 def generate_hash_message(message):
     message_json = json.dumps(message)
     hex_digest = hash(message_json)
@@ -242,21 +215,24 @@ def generate_hash_message(message):
 
 
 def load_key(key_path, key_type):
-    with open("keys/" + key_path, "rb") as key_file:
-        key_data = key_file.read()
-        if key_type == "private":
-            return serialization.load_pem_private_key(
-                key_data, password=None, backend=default_backend()
-            )
-        elif key_type == "public":
-            return serialization.load_pem_public_key(key_data, backend=default_backend())
+    try:
+        with open("keys/" + key_path, "rb") as key_file:
+            key_data = key_file.read()
+            if key_type == "private":
+                return serialization.load_pem_private_key(
+                    key_data, password=None, backend=default_backend()
+                )
+            elif key_type == "public":
+                return serialization.load_pem_public_key(key_data, backend=default_backend())
+    except Exception as e:
+        print(f"Error loading key: {e}")
+        return None
         
 #added so exchange works 
 def ensure_keys():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
 
-# Define the key directory and file paths
     key_dir = "keys/"
     private_key_path = os.path.join(key_dir, "private_key.pem")
     public_key_path = os.path.join(key_dir, "public_key.pem")
@@ -269,17 +245,11 @@ def ensure_keys():
         save_key(private_key, "private_key.pem", "private")
         public_key = gen_public_key(private_key)
         save_key(public_key,"public_key.pem", "public")
-        # with open(private_key_path, "wb") as priv_file:
-        #     priv_file.write(private_key.export_key('PEM'))
     if not os.path.exists(private_key_path):
         private_key = gen_private_key()
         save_key(private_key, "private_key.pem", "private")
         public_key = gen_public_key(private_key)
         save_key(public_key,"public_key.pem", "public")
-        # with open(public_key_path, "wb") as pub_file:
-        #     pub_file.write(public_key.export_key('PEM'))
         print("Keys generated and saved.")
     else:
         print("Keys already exist.")
-
-ensure_keys()
