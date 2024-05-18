@@ -5,6 +5,7 @@ from unittest.mock import patch
 from security_utils import gen_private_key, save_key
 from Client import GUIClient
 
+
 class TestGUIClient(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -16,18 +17,26 @@ class TestGUIClient(unittest.TestCase):
         save_key(private_key, cls.private_key_path, "private")
         save_key(public_key, cls.public_key_path, "public")
 
-    @patch('socket.socket.connect')
+    @patch("socket.socket.connect")
     def test_key_loading(self, mock_connect):
-        """ Test if keys are loaded properly from files. """
-        client = GUIClient(None, 'localhost', 12345, self.private_key_path, self.public_key_path)
+        """Test if keys are loaded properly from files."""
+        client = GUIClient(
+            None, "localhost", 12345, self.private_key_path, self.public_key_path
+        )
         self.assertIsNotNone(client.client_private_key)
         self.assertIsNotNone(client.client_public_key)
 
-    @patch('socket.socket.connect')
+    @patch("socket.socket.connect")
     def test_missing_key_files(self, mock_connect):
-        """ Test the behavior when key files are missing. """
+        """Test the behavior when key files are missing."""
         with self.assertRaises(FileNotFoundError):
-            GUIClient(None, 'localhost', 12345, "non_existent_private.pem", "non_existent_public.pem")
+            GUIClient(
+                None,
+                "localhost",
+                12345,
+                "non_existent_private.pem",
+                "non_existent_public.pem",
+            )
 
     @classmethod
     def tearDownClass(cls):
@@ -36,6 +45,7 @@ class TestGUIClient(unittest.TestCase):
             os.remove(cls.private_key_path)
         if os.path.exists(cls.public_key_path):
             os.remove(cls.public_key_path)
+
 
 if __name__ == "__main__":
     unittest.main()

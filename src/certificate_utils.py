@@ -23,7 +23,6 @@ def load_ca_public_key(ca_cert_path):
         print("Failed to load CA public key:",str(e))
         return None
 
-
 def verify_certificate(cert_path, ca_cert_path):
    
     ca_public_key = load_ca_public_key(ca_cert_path)
@@ -41,7 +40,6 @@ def verify_certificate(cert_path, ca_cert_path):
     except Exception as e:
         print("Certificate verification failed:", e)
         return None
-
 
 def create_certificate(public_key):
     ca_public_key = load_ca_public_key("keys/ca_public_key.pem")
@@ -82,7 +80,6 @@ def create_certificate(public_key):
 
     return cert
 
-
 def save_certificate(certificate_bytes, file_name):
     try:
       certificate = load_pem_x509_certificate(certificate_bytes, default_backend())
@@ -92,11 +89,9 @@ def save_certificate(certificate_bytes, file_name):
         print("Certificate failed to save:", str(e))
         return ("Error", False)
 
-
 def save_certificate_1(certificate_bytes, file_name):
     with open("keys/" + file_name, "wb") as f:
         f.write(certificate_bytes.public_bytes(serialization.Encoding.PEM))
-
 
 def load_certificate(filename):
     try:

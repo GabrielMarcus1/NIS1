@@ -5,37 +5,20 @@ to construct the mesage as well as unravel the message
 from security_utils import *
 from cryptography.hazmat.primitives import serialization
 # TODO:  
-# 1. Add key rings 
-# 2. Create secret key (Done) ✔️
-# 3. Construct message (PGP  paradigm) (Done) ✔️
-#       3.1 Authentication  (DONE) ✔️ 
-#       3.2 Confidentiality (DONE) ✔️
-# 4. Hashing (DONE) ✔️
-# 5. Key management - key rings, private , public, other persons. secret...
-# 6. Certificate (DONE) ✔️
-# 7. Formatting message. (DONE) ✔️
-# 8. Report 
-# 9. Testing and debugging 
-# 10. Refactor
-# 11. Coments  
-# 12. Handshake to establish connections 
-# 13. Network
-# 14: GUI 
-
 
 
 
 #########################TESTING ##########################################
 #create a users public private key set
-private_key = gen_private_key()
-public_key = gen_public_key(private_key)
+# private_key = gen_private_key()
+# public_key = gen_public_key(private_key)
 
-private_key_bytes = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption()
-    )
-print(private_key_bytes)
+# private_key_bytes = private_key.private_bytes(
+#         encoding=serialization.Encoding.PEM,
+#         format=serialization.PrivateFormat.TraditionalOpenSSL,
+#         encryption_algorithm=serialization.NoEncryption()
+#     )
+# print(private_key_bytes)
 
 
 # # cipher= RSA_algorithm.encrypt("Hello World",public_key)
