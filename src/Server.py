@@ -3,7 +3,7 @@ import threading
 CHUNK_SIZE=2048
 class Server:
     def __init__(self, port):
-        self.host = self.get_ip_address()
+        self.host = 'localhost' #self.get_ip_address()
         self.port = port
         self.clients = []
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
