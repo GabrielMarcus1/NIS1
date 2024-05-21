@@ -128,8 +128,8 @@ class GUIClient:
         self.send_cert("keys/my_certificate.pem")
 
     def receive_certificate(self, cert_length):
-        if(self.certificate_sent == False):
-            self.send_cert("keys/my_certificate.pem")
+        # if(self.certificate_sent == False):
+        #     self.send_cert("keys/my_certificate.pem")
 
         received_chunks = b""
         while cert_length > 0:
@@ -180,7 +180,7 @@ def main():
     root = tk.Tk()
     root.withdraw()  # Hide the root window
     # client = GUIClient(root, "196.42.106.155", 8090)
-    client = GUIClient(root, "192.168.251.58", 8090)
+    client = GUIClient(root, "localhost", 8090)
     # server_ip = simpledialog.askstring("Server IP", "Enter the server IP address:")
     # socket = simpledialog.askinteger(
     #     "Socket", "Enter the socket you wish to connect to:"
